@@ -21,7 +21,9 @@ import com.example.themovier.constants.Constants
 import com.example.themovier.model.BottomNavItem
 import com.example.themovier.navigation.MovierNavigation
 import com.example.themovier.ui.theme.TheMovierTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
