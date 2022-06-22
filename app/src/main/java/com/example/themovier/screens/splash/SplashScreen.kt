@@ -14,11 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.themovier.R
 import com.example.themovier.navigation.MovierScreens
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 
 @Composable
@@ -36,7 +36,13 @@ fun SplashScreen(navController: NavController) {
             }
         ))
         delay(1500L)
-        navController.navigate(MovierScreens.HomeScreen.name)
+
+        if(FirebaseAuth.getInstance().currentUser?.email.isNullOrBlank()) {
+            navController.navigate(MovierScreens.LoginScreen.name)
+        }
+        else{
+            navController.navigate(MovierScreens.HomeScreen.name)
+        }
     }
     Box(
         contentAlignment = Alignment.Center,
