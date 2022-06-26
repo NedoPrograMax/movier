@@ -1,5 +1,6 @@
 package com.example.themovier.widgets
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -11,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.runtime.Composable
@@ -32,7 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.themovier.model.MovieItem
+import com.example.themovier.model.MovierItem
 import com.example.themovier.utils.DragTarget
 import com.example.themovier.utils.DropTarget
 
@@ -41,7 +43,7 @@ fun AddingArea(isAdding: MutableState<Boolean>) {
 
     val context = LocalContext.current
 
-    DropTarget<MovieItem>(
+    DropTarget<MovierItem>(
         modifier = Modifier
             .padding(6.dp)
             .fillMaxWidth()
@@ -91,7 +93,7 @@ fun AddingArea(isAdding: MutableState<Boolean>) {
 
 @Composable
 fun MovieItemCard(
-    movieItem: MovieItem,
+    movieItem: MovierItem,
     isAdding: MutableState<Boolean>,
     modifier: Modifier,
     screenHeight: Float,
@@ -133,7 +135,7 @@ fun MovieItemCard(
 
 @Composable
 fun MovieItemsRow(
-    movieList: List<MovieItem>,
+    movieList: List<MovierItem>,
     cardModifier: Modifier = Modifier,
     isAdding: MutableState<Boolean>,
     screenHeight: Float,
@@ -232,5 +234,19 @@ fun PasswordVisibility(passwordVisibility: MutableState<Boolean>) {
     val visible = passwordVisibility.value
     IconButton(onClick = { passwordVisibility.value = !visible }) {
         Icon(imageVector = Icons.Default.Password, contentDescription = "Password Icon", tint = Color.LightGray)
+    }
+}
+
+fun showToast(context: Context, message: String, toastLength: Int = Toast.LENGTH_LONG ){
+    Toast.makeText(context, message, toastLength).show()
+}
+
+@Composable
+fun FABContent(onTap: () -> Unit) {
+    FloatingActionButton(
+        onClick = { onTap() },
+        shape = RoundedCornerShape(50.dp),
+        backgroundColor = MaterialTheme.colors.background) {
+        Icon(imageVector = Icons.Default.Add, contentDescription = "Add Icon", tint = MaterialTheme.colors.onBackground)
     }
 }

@@ -4,5 +4,8 @@ enum class MovierScreens {
     SplashScreen,
     HomeScreen,
     RandomScreen,
-    LoginScreen
+    LoginScreen,
+    AboutScreen,
+    SearchScreen,
+    DetailsScreen
 }

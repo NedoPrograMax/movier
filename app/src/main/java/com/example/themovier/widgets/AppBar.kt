@@ -6,6 +6,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.sp
 
@@ -18,7 +19,9 @@ fun MovierAppBar(
 ){
     TopAppBar(
         title = {
-            Row() {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 if (icon != null) {
                     IconButton(onClick = onIconClick) {
                         Icon(imageVector = icon, contentDescription = "App Bar Icon")
