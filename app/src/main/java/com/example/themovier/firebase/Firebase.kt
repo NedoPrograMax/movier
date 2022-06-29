@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
+import com.example.themovier.model.MovierItem
 import com.example.themovier.model.MovierUser
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -51,6 +52,40 @@ fun updateUserProfileData(userHashMap: Map<String, Any>, documentId: String) {
         }
         .addOnFailureListener { e ->
             Log.e("UpdatingUser", e.message!!)
+        }
+}
+
+fun createMovie(movie: MovierItem){
+    FirebaseFirestore.getInstance().collection("movies")
+        .add(movie)
+        .addOnSuccessListener {   documentRef->
+            val documentId = documentRef.id
+            FirebaseFirestore.getInstance().collection("movies")
+                .document(documentId)
+                .update(hashMapOf("id" to documentId) as Map<String, Any>)
+                .addOnCompleteListener{task->
+                    if (task.isSuccessful){
+                        Log.d("UpdatingMovie", "Success")
+                    }
+                }
+                .addOnFailureListener {
+                    Log.e("UpdatingMovie", it.message!!)
+                }
+        }
+        .addOnFailureListener {
+            Log.e("Create Movie", it.message!!)
+        }
+}
+
+fun deleteMovie(movieId: String){
+    FirebaseFirestore.getInstance().collection("movies")
+        .document(movieId)
+        .delete()
+        .addOnSuccessListener {
+            Log.d("DeleteMovie", "Success")
+        }
+        .addOnFailureListener {
+            Log.e("DeleteMovie", it.message!!)
         }
 }
 

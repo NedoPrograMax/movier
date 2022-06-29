@@ -7,5 +7,6 @@ enum class MovierScreens {
     LoginScreen,
     AboutScreen,
     SearchScreen,
-    DetailsScreen
+    DetailsScreen,
+    UpdateScreen
 }

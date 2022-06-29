@@ -17,6 +17,7 @@ import com.example.themovier.screens.login.LoginScreen
 import com.example.themovier.screens.random.RandomScreen
 import com.example.themovier.screens.search.SearchScreen
 import com.example.themovier.screens.splash.SplashScreen
+import com.example.themovier.screens.update.UpdateScreen
 
 @Composable
 fun MovierNavigation(
@@ -58,6 +59,17 @@ fun MovierNavigation(
         {backStackEntry->
             backStackEntry.arguments?.getString("movieId").let {movieId->
                 DetailsScreen(navController, movieId)
+            }
+        }
+
+        val updateRoot = MovierScreens.UpdateScreen.name
+        composable(updateRoot + "/{movieId}",
+            arguments = listOf(navArgument("movieId"){
+                type = NavType.StringType
+            }))
+        {backStackEntry->
+            backStackEntry.arguments?.getString("movieId").let {movieId->
+                UpdateScreen(navController, movieId)
             }
         }
     }

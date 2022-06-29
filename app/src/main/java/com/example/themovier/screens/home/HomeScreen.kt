@@ -18,8 +18,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.themovier.model.unwatchedMovieList
-import com.example.themovier.model.watchedMovieList
 import com.example.themovier.navigation.MovierScreens
 import com.example.themovier.utils.LongPressDraggable
 import com.example.themovier.utils.isPermanentlyDenied
@@ -77,7 +75,7 @@ fun HomeScreen(
         }
     }
 
-   val dataOrException = viewModel.data.value
+   val dataOrException = viewModel.dataUser.value
     val userData = dataOrException.data
     userData?.let {
         Log.d("TestingUser", userData.name)
@@ -140,7 +138,12 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center
             ) {
-                HomeContent(navController = navController)
+                if (viewModel.loadingMovies.value && viewModel.dataMovies.value.data.isNullOrEmpty()){
+                    LinearProgressIndicator()
+                }
+                else {
+                    HomeContent(navController = navController, viewModel)
+                }
             }
         }
     }
@@ -150,14 +153,14 @@ fun HomeScreen(
         Text(text = e.message!!)
     }
 
-    if (viewModel.loading.value){
+    if (viewModel.loadingUser.value){
         CircularProgressIndicator()
     }
 }
 
 
 @Composable
-fun HomeContent(navController: NavController){
+fun HomeContent(navController: NavController, viewModel: HomeScreenViewModel){
 
     val isAddingWatched = remember {
         mutableStateOf(false)
@@ -165,6 +168,13 @@ fun HomeContent(navController: NavController){
     val isAddingUnWatched = remember {
         mutableStateOf(false)
     }
+
+    val watchedMovieList = viewModel.dataMovies.value.data?.filter {movie->
+        movie.startDate.isNotBlank() && movie.finishDate.isBlank()
+    }!!
+    val unwatchedMovieList = viewModel.dataMovies.value.data?.filter {movie->
+        movie.startDate.isBlank()
+    }!!
     val displayMetrics = LocalContext.current.resources.displayMetrics
     val screenHeight = displayMetrics.heightPixels / displayMetrics.density
     val screenWidth = displayMetrics.widthPixels / displayMetrics.density
@@ -174,23 +184,27 @@ fun HomeContent(navController: NavController){
 
     LongPressDraggable(modifier = Modifier.fillMaxSize()) {
         Column() {
-            AddingArea(isAddingWatched, )
+            AddingArea(isAddingWatched, viewModel, "Watching now")
+
+            Log.d("WathedListM", watchedMovieList.toString())
 
             MovieItemsRow(
                 movieList = watchedMovieList,
-                isAdding = isAddingWatched,
+                isAdding = isAddingUnWatched,
                 cardModifier = cardModifier,
                 screenHeight = screenHeight,
+                navController = navController,
                 screenWidth = screenWidth
                 )
 
-            AddingArea(isAddingUnWatched)
+            AddingArea(isAddingUnWatched, viewModel, "Watch later")
 
             MovieItemsRow(
                 movieList = unwatchedMovieList,
                 cardModifier = cardModifier,
-                isAdding = isAddingUnWatched,
+                isAdding = isAddingWatched,
                 screenHeight = screenHeight,
+                navController = navController,
                 screenWidth = screenWidth
             )
 

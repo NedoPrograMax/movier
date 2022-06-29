@@ -1,12 +1,16 @@
 package com.example.themovier.widgets
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -15,13 +19,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.ThumbUp
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -34,12 +38,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.themovier.model.MovierItem
+import com.example.themovier.navigation.MovierScreens
+import com.example.themovier.screens.home.HomeScreenViewModel
 import com.example.themovier.utils.DragTarget
 import com.example.themovier.utils.DropTarget
+import com.example.themovier.utils.formatDate
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlin.random.Random
 
 @Composable
-fun AddingArea(isAdding: MutableState<Boolean>) {
+fun AddingArea(isAdding: MutableState<Boolean>, viewModel: HomeScreenViewModel, title: String) {
 
     val context = LocalContext.current
 
@@ -48,7 +62,7 @@ fun AddingArea(isAdding: MutableState<Boolean>) {
             .padding(6.dp)
             .fillMaxWidth()
             .height(30.dp)
-    ) { isInBound, foodItem ->
+    ) { isInBound, movierItem ->
         val bgColor = if (!isAdding.value)
             Color.Transparent
         else  if (isInBound) {
@@ -57,11 +71,25 @@ fun AddingArea(isAdding: MutableState<Boolean>) {
             Color.White
         }
 
-        foodItem?.let {
+        movierItem?.let {
+            val date = formatDate(Timestamp.now())
             if (isInBound) {
-                Toast.makeText(context, foodItem.title, Toast.LENGTH_SHORT).show()
+
+                val hashMap = if(movierItem.startDate.isBlank()) hashMapOf<String, Any>("startDate" to date)
+                else hashMapOf<String, Any>("startDate" to "")
+                FirebaseFirestore.getInstance().collection("movies")
+                    .document(movierItem.id)
+                    .update(hashMap)
+                    .addOnSuccessListener {
+                        Log.d("CheckingSmth", hashMap.toString() + movierItem.title)
+                        viewModel.getUserMovies(FirebaseAuth.getInstance().currentUser!!.uid)
+                    }
+                    .addOnFailureListener {
+                        Log.e("CheckingSmth", it.message!!)
+                    }
+             //   Toast.makeText(context, movierItem.title, Toast.LENGTH_SHORT).show()
             }
-            // foodItems[foodItem.id] = foodItem
+            // foodItems[movierItem.id] = movierItem
         }
 
         Column(
@@ -76,15 +104,13 @@ fun AddingArea(isAdding: MutableState<Boolean>) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            if(isAdding.value) {
                 Text(
-                    text = "Area",
+                    text = if(isAdding.value) "Add to the list" else title,
                     fontSize = 18.sp,
-                    color = Color.Black,
+                    color = Color.Red,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
-            }
 
         }
     }
@@ -97,40 +123,44 @@ fun MovieItemCard(
     isAdding: MutableState<Boolean>,
     modifier: Modifier,
     screenHeight: Float,
+    navController: NavController,
     screenWidth: Float
 ) {
+    val context = LocalContext.current
+    val image by remember(movieItem){
+        mutableStateOf("https://image.tmdb.org/t/p/w500" + movieItem.posterUrl)
+    }
+    DragTarget(modifier = Modifier, dataToDrop = movieItem, isAdding = isAdding, key = Random.nextInt(1, 100)) {
 
-    Card(
-        elevation = 10.dp,
-        shape = RoundedCornerShape(24.dp),
-        modifier = modifier
-            .padding(8.dp)
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp)
-        ) {
-            DragTarget(modifier = Modifier, dataToDrop = movieItem, isAdding) {
-                Image(
-                    imageVector = Icons.Default.ThumbUp,
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .width((screenWidth * 0.45).dp)
-                        .height((screenHeight * 0.18).dp)
-                        .clip(RoundedCornerShape(16.dp))
-                )
-            }
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(image)
+                    .crossfade(true)
+                    .build(),
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .width((screenWidth * 0.40).dp)
+                    .height((screenHeight * 0.34).dp)
+                    .clip(RoundedCornerShape(18.dp))
+              /*      .pointerInput(Unit){
+                        detectTapGestures (
+                            onTap = { },
+                            onPress = {
+                                showToast(context, movieItem.title)
+                                Log.d("PosterCh", image)
+                            }
+                        )
+                    }
 
-            Text(
-                text = movieItem.title,
-                fontSize = 22.sp,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+               */
+                    .clickable {
+                        navController.navigate(MovierScreens.UpdateScreen.name + "/${movieItem.id}")
+                    }
+                               ,
+
+                contentDescription = "Movie Image"
             )
         }
-    }
 }
 
 @Composable
@@ -139,6 +169,7 @@ fun MovieItemsRow(
     cardModifier: Modifier = Modifier,
     isAdding: MutableState<Boolean>,
     screenHeight: Float,
+    navController : NavController,
     screenWidth: Float
 ) {
     LazyRow() {
@@ -148,6 +179,7 @@ fun MovieItemsRow(
                 isAdding = isAdding,
                 modifier = cardModifier,
                 screenHeight = screenHeight,
+                navController = navController,
                 screenWidth = screenWidth)
         }
     }
@@ -162,6 +194,7 @@ fun InputField(
     enabled: Boolean = true,
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Next,
+    textStyle : TextStyle = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onBackground),
     visualTransformation: VisualTransformation = VisualTransformation.None,
     trailingIcon : @Composable (() -> Unit)? = {},
     onAction : KeyboardActions = KeyboardActions.Default
@@ -171,7 +204,7 @@ fun InputField(
         onValueChange = {valueState.value = it},
     label = { Text(text = labelId)},
         singleLine = isSingleLine,
-        textStyle = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onBackground),
+        textStyle = textStyle,
         modifier = modifier
             .padding(bottom = 10.dp, start = 10.dp, end = 10.dp)
             .fillMaxWidth(),

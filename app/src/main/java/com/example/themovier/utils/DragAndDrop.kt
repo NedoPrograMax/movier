@@ -60,6 +60,7 @@ fun LongPressDraggable(
 fun <T> DragTarget(
     modifier: Modifier,
     dataToDrop: T,
+    key: Int,
     isAdding: MutableState<Boolean>,
     content: @Composable () -> Unit
 ) {
@@ -71,7 +72,7 @@ fun <T> DragTarget(
         .onGloballyPositioned {
             currentPosition = it.localToWindow(Offset.Zero)
         }
-        .pointerInput(Unit) {
+        .pointerInput(key) {
             detectDragGesturesAfterLongPress(onDragStart = {
                 isAdding.value = true
                 currentState.dataToDrop = dataToDrop
@@ -79,7 +80,8 @@ fun <T> DragTarget(
                 currentState.dragPosition = currentPosition + it
                 currentState.draggableComposable = content
             }, onDrag = { change, dragAmount ->
-                change.consumeAllChanges()
+                change.consume()
+                Log.d("CheckDrag", dataToDrop.toString())
                 currentState.dragOffset += Offset(dragAmount.x, dragAmount.y)
             }, onDragEnd = {
                 isAdding.value = false
