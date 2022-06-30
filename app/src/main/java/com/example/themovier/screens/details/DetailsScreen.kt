@@ -36,7 +36,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 fun DetailsScreen(
     navController: NavController,
     movieId: String?,
-    viewModel: DetailsViewModel = hiltViewModel()){
+    viewModel: DetailsViewModel = hiltViewModel(),
+    movieType: String
+){
 
     var isFavoriteIcon by remember{
         mutableStateOf(false)
@@ -58,8 +60,11 @@ fun DetailsScreen(
                             viewModel.data?.apply {
                                 val movie: MovierItem = MovierItem(
                                     title = title,
-                                    idDb = id,
-                                    posterUrl = poster_path,
+                                    idDb = idDb,
+                                    type = movieType,
+                                    posterUrl = posterUrl,
+                                    description = description,
+                                    seasons = seasons,
                                     userId = FirebaseAuth.getInstance().currentUser!!.uid
                                     )
                                 createMovie(movie)
@@ -83,7 +88,7 @@ fun DetailsScreen(
 
     ) {
         it
-        viewModel.searchMovie(movieId!!)
+        viewModel.searchMovie(movieId!!, movieType)
         if (viewModel.isLoading){
             LinearProgressIndicator()
 
@@ -118,7 +123,7 @@ fun DetailsContent(viewModel: DetailsViewModel){
         item {
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data("https://image.tmdb.org/t/p/w500" + viewModel.data?.poster_path)
+                    .data("https://image.tmdb.org/t/p/w500" + viewModel.data?.posterUrl)
                     .crossfade(true)
                     .build(),
                 contentScale = ContentScale.Fit,
@@ -134,45 +139,13 @@ fun DetailsContent(viewModel: DetailsViewModel){
             )
 
             Text(
-                text = viewModel.data!!.overview,
+                text = viewModel.data!!.description,
                 modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
                 style = MaterialTheme.typography.h6,
                 fontWeight = FontWeight.Light
             )
 
-            var genres = ""
-            for (genre in viewModel.data!!.genres){
-                genres += genre.name + ", "
-            }
-            genres = genres.subSequence(0, genres.length - 2).toString()
 
-            Text(
-                text = "Genres: " + genres,
-                modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-                style = MaterialTheme.typography.h6,
-                fontWeight = FontWeight.Light
-            )
-
-            Text(
-                text = "Original Language: " + viewModel.data!!.original_language,
-                modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-                style = MaterialTheme.typography.h6,
-                fontWeight = FontWeight.Light
-            )
-
-            Text(
-                text = "Status: " + viewModel.data!!.status,
-                modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-                style = MaterialTheme.typography.h6,
-                fontWeight = FontWeight.Light
-            )
-
-            Text(
-                text = "Release date: " + viewModel.data!!.release_date,
-                modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-                style = MaterialTheme.typography.h6,
-                fontWeight = FontWeight.Light
-            )
         }
     }
 }

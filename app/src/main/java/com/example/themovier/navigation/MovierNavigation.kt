@@ -52,14 +52,23 @@ fun MovierNavigation(
         }
 
         val detailsRoot = MovierScreens.DetailsScreen.name
-        composable(detailsRoot + "/{movieId}",
-        arguments = listOf(navArgument("movieId"){
+        composable(detailsRoot + "/{movieId}/{movieType}",
+        arguments = listOf(
+            navArgument("movieId"){
             type = NavType.StringType
-        }))
-        {backStackEntry->
-            backStackEntry.arguments?.getString("movieId").let {movieId->
-                DetailsScreen(navController, movieId)
+        },
+            navArgument("movieType"){
+                type = NavType.StringType
             }
+        )
+        )
+        {backStackEntry->
+          val movieId = backStackEntry.arguments?.getString("movieId")
+            val movieType = backStackEntry.arguments?.getString("movieType")
+            if(!movieId.isNullOrBlank() && !movieType.isNullOrBlank()) {
+                DetailsScreen(navController, movieId = movieId, movieType = movieType)
+            }
+
         }
 
         val updateRoot = MovierScreens.UpdateScreen.name

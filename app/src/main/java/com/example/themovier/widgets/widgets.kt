@@ -141,7 +141,9 @@ fun MovieItemCard(
                 modifier = Modifier
                     .width((screenWidth * 0.40).dp)
                     .height((screenHeight * 0.34).dp)
-                    .clip(RoundedCornerShape(18.dp))
+                    .padding(2.dp)
+                    .clip(RoundedCornerShape(16.dp)
+                    )
               /*      .pointerInput(Unit){
                         detectTapGestures (
                             onTap = { },

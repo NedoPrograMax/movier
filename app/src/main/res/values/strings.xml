@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">The Movier</string>
+    <string name="about_app">The Movier v.0.1</string>
+    <string name="api_used">MovieDbAPI was used</string>
 </resources>

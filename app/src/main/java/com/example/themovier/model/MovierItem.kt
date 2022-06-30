@@ -13,7 +13,10 @@ data class MovierItem(
     val userId: String = "",
     val type: String = "movie",
     val startDate: String = "",
-    val finishDate: String = ""
+    val finishDate: String = "",
+    val favoriteEpisodes : List<Episode> = listOf(),
+    val seasons : List<Episode> = listOf(),
+    val description: String = ""
     )
 /*
 val unwatchedMovieList = listOf(

@@ -37,7 +37,7 @@ fun SearchScreen(
                 title = "Search Screen",
                 icon = Icons.Default.ArrowBack,
                 onIconClick = {
-                    navController.popBackStack()
+                    navController.navigate(MovierScreens.HomeScreen.name)
                 })
         }
     ) {
@@ -51,6 +51,10 @@ fun SearchContent(navController: NavController, viewModel: SearchScreenViewModel
     val searchQuery = rememberSaveable{
         mutableStateOf("")
     }
+    var movieType by remember{
+        mutableStateOf("movie")
+    }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -58,18 +62,43 @@ fun SearchContent(navController: NavController, viewModel: SearchScreenViewModel
         InputField(
             valueState = searchQuery,
             labelId = "Movie Title",
-            modifier = Modifier.fillMaxWidth(0.8f),
+            modifier = Modifier.fillMaxWidth(0.9f),
             imeAction = ImeAction.Search,
             onAction = KeyboardActions {
-                viewModel.searchMovies(searchQuery.value)
+                viewModel.searchMovies(searchQuery.value, movieType = movieType)
             }
         )
+
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row {
+               RadioButton(
+                   selected = movieType == "movie",
+                   onClick = { movieType = "movie"
+                       viewModel.searchMovies(searchQuery.value.ifEmpty { "Friends" }, movieType = movieType)
+                             },
+               )
+                Text(text = "Movie")
+            }
+
+            Row {
+                RadioButton(
+                    selected = movieType == "tv",
+                    onClick = { movieType = "tv"
+                        viewModel.searchMovies(searchQuery.value.ifEmpty { "Friends" }, movieType = movieType)
+                              },
+                )
+                Text(text = "TV Show")
+            }
+        }
         
         if (viewModel.isLoading){
             LinearProgressIndicator()
         }
         else{
-            MoviesColumn(viewModel = viewModel, navController)
+            MoviesColumn(viewModel = viewModel, navController, movieType = movieType)
         }
         
 
@@ -77,20 +106,20 @@ fun SearchContent(navController: NavController, viewModel: SearchScreenViewModel
 }
 
 @Composable
-fun MoviesColumn(viewModel: SearchScreenViewModel, navController: NavController){
+fun MoviesColumn(viewModel: SearchScreenViewModel, navController: NavController, movieType: String){
     val movieList = viewModel.data!!.results
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
         modifier = Modifier.fillMaxSize()
     ){
         items(movieList){movie->
-            MovieCardInGrid(movie, navController)
+            MovieCardInGrid(movie, navController, movieType = movieType)
         }
     }
 }
 
 @Composable
-fun MovieCardInGrid(movie: Movie, navController: NavController) {
+fun MovieCardInGrid(movie: Movie, navController: NavController, movieType: String) {
 
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -99,7 +128,7 @@ fun MovieCardInGrid(movie: Movie, navController: NavController) {
                     .build(),
                 modifier = Modifier
                     .fillMaxSize()
-                    .clickable { navController.navigate(MovierScreens.DetailsScreen.name + "/${movie.id}") },
+                    .clickable { navController.navigate(MovierScreens.DetailsScreen.name + "/${movie.id}" + "/${movieType}") },
                 contentScale = ContentScale.Fit,
                 contentDescription = "Movie Image"
             )

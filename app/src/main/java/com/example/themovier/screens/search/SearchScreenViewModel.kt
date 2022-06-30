@@ -19,14 +19,14 @@ class SearchScreenViewModel @Inject constructor(private val repository: MovieRep
     var isLoading: Boolean by mutableStateOf(true)
 
     init {
-        searchMovies("Friends")
+        searchMovies("Friends", "movie")
     }
 
-     fun searchMovies(query: String) {
+     fun searchMovies(query: String, movieType: String) {
         viewModelScope.launch(Dispatchers.Default) {
             if (query.isBlank()) return@launch
             try {
-                val response = repository.getMovies(query)
+                val response = repository.getMovies(query = query, movieType = movieType)
                 if (response.data != null){
                     data = response.data
                     isLoading = false
