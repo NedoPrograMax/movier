@@ -1,6 +1,7 @@
 package com.example.themovier.screens.update
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,6 +34,7 @@ import com.example.themovier.model.MovierItem
 import com.example.themovier.navigation.MovierScreens
 import com.example.themovier.utils.formatDate
 import com.example.themovier.widgets.ChooseDialog
+import com.example.themovier.widgets.FavoriteEpisodes
 import com.example.themovier.widgets.InputField
 import com.example.themovier.widgets.MovierAppBar
 import com.google.firebase.Timestamp
@@ -64,7 +67,7 @@ fun UpdateScreen(navController: NavController, movieId: String?, viewModel: Upda
                    actions = {
                        IconButton(onClick = {
                            deleteMovie(movieId)
-                           navController.navigate(MovierScreens.HomeScreen.name)
+                           navController.popBackStack()
                        }) {
                            Icon(
                                imageVector = Icons.Default.Delete,
@@ -84,11 +87,15 @@ fun UpdateScreen(navController: NavController, movieId: String?, viewModel: Upda
 @Composable
 fun UpdateContent(navController: NavController, movie: MovierItem){
     val context = LocalContext.current
+    var detailsType by remember{
+        mutableStateOf("details")
+    }
     LazyColumn(
         //  modifier = Modifier.scrollable(scroll, orientation = Orientation.Vertical),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
+
             AsyncImage(
                 model = ImageRequest.Builder(context)
                     .data("https://image.tmdb.org/t/p/w500" + movie.posterUrl)
@@ -106,12 +113,38 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                fontWeight = FontWeight.Bold
            )
 
-            Text(
-                text = movie.description,
-                modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-                style = MaterialTheme.typography.h6,
-                fontWeight = FontWeight.Light
-            )
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(  verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = detailsType == "details",
+                        onClick = { detailsType = "details"
+                        },
+                    )
+                    Text(text = "Details")
+                }
+
+                Row(  verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = detailsType == "update",
+                        onClick = { detailsType = "update"
+                        },
+                    )
+                    Text(text = "Update")
+                }
+            }
+
+
+            if (detailsType == "details") {
+                Text(
+                    text = movie.description,
+                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
+                    style = MaterialTheme.typography.h6,
+                    fontWeight = FontWeight.Light
+                )
+            }
 
 
 
@@ -131,38 +164,52 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                 mutableStateOf(false)
             }
 
-            InputField(
-                valueState = noteState,
-                labelId = "Your notes",
-                modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-                textStyle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            if(detailsType == "update") {
+                InputField(
+                    valueState = noteState,
+                    labelId = "Your notes",
+                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
+                    textStyle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 )
+            }
+            else{
+                Text(
+                    text = "Note: " + noteState.value,
+                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
+                    style = MaterialTheme.typography.h6,
+                    fontWeight = FontWeight.Light
+                )
+            }
 
             if(startWatching.isBlank()){
-                Button(
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.padding(vertical = 6.dp),
-                    onClick = {
-                        someButtonClicked = true
-                        startWatching = formatDate(Timestamp.now())
+                if (detailsType == "update") {
+                    Button(
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.padding(vertical = 6.dp),
+                        onClick = {
+                            someButtonClicked = true
+                            startWatching = formatDate(Timestamp.now())
+                        }
+                    ) {
+                        Text(text = "Start Watching", fontSize = 14.sp)
                     }
-                ) {
-                    Text(text = "Start Watching", fontSize = 20.sp)
                 }
             }
             else{
                 Text(text = "Started Watching at: $startWatching", fontSize = 20.sp)
 
                 if(finishWatching.isBlank()){
-                    Button(
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.padding(vertical = 6.dp),
-                        onClick = {
-                            someButtonClicked = true
-                            finishWatching = formatDate(Timestamp.now())
+                    if(detailsType == "update") {
+                        Button(
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.padding(vertical = 6.dp),
+                            onClick = {
+                                someButtonClicked = true
+                                finishWatching = formatDate(Timestamp.now())
+                            }
+                        ) {
+                            Text(text = "Finish Watching", fontSize = 14.sp)
                         }
-                    ) {
-                        Text(text = "Finish Watching", fontSize = 14.sp)
                     }
                 }
                 else{
@@ -215,6 +262,7 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                 }
 
 
+                Text(text = "You stopped at ")
 
                 Row() {
                     if (showSeasonDialog.value) {
@@ -226,7 +274,10 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                             })
                     }
 
-                    TextButton(onClick = { showSeasonDialog.value = true }) {
+                    TextButton(
+                        onClick = { showSeasonDialog.value = true },
+                        enabled = detailsType == "update"
+                    ) {
                         Text(text = "Season: " + season)
                     }
 
@@ -239,7 +290,9 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                             })
                     }
 
-                    TextButton(onClick = { showEpisodeDialog.value = true }) {
+                    TextButton(
+                        onClick = { showEpisodeDialog.value = true },
+                        enabled = detailsType == "update") {
                         Text(text = "Episode: " + episode)
                     }
                 }
@@ -258,6 +311,7 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                     ChooseDialog(setShowDialog = { showFavEpisodeDialog.value = it },
                         listOfStrings = favEpisodeList,
                         onItemClick = {
+                            if(detailsType == "update"){
                             favEpisode = it.toInt()
                             showFavEpisodeDialog.value = false
 
@@ -265,72 +319,81 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                                 season = favSeason,
                                 episode = favEpisode
                             )))
+                                }
                         })
                 }
 
-                TextButton(onClick = {
-                    showFavSeasonDialog.value = true
-                    if (favSeason != 1 && favEpisode != 1){
+                if(detailsType == "update") {
+                    TextButton(onClick = {
+                        showFavSeasonDialog.value = true
+                        if (favSeason != 1 && favEpisode != 1) {
 
+                        }
+                    }) {
+                        Text(text = "Add Favorite Episode")
                     }
-                }) {
-                    Text(text = "Add Favorite Episode")
                 }
+
                 FavoriteEpisodes(favoriteEpisodes){
                     favoriteEpisodes.value = favoriteEpisodes.value.minus(it)
                 }
             }
+            val resourceState = remember{
+                mutableStateOf(movie.resource)
+            }
 
-            Button(
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth(0.5f),
-                enabled = noteChange || someButtonClicked || movie.season != season || movie.episode != episode
-                        || movie.favoriteEpisodes != favoriteEpisodes.value.toList(),
-                onClick = {
-                    FirebaseFirestore.getInstance().collection("movies")
-                        .document(movie.id)
-                        .update(hashMapOf(
-                            "note" to noteState.value,
-                            "startDate" to startWatching,
-                            "finishDate" to finishWatching,
-                            "season" to season,
-                            "favoriteEpisodes" to favoriteEpisodes.value,
-                            "episode" to episode
-                        ) as Map<String, Any>)
-                        .addOnSuccessListener {
-                            navController.popBackStack()
-                        }
+            if (detailsType == "update"){
+                InputField(valueState = resourceState,
+                    labelId = "Resource of your movie",
+                    modifier = Modifier.fillMaxWidth(0.8f))
+            }
+            else if(movie.resource.isNotBlank()){
+                val uriHandler = LocalUriHandler.current
+
+                TextButton(onClick = { uriHandler.openUri(movie.resource) }) {
+                    Text(
+                        text = "Click to the resource",
+                        color = MaterialTheme.colors.secondaryVariant
+                    )
                 }
-            ) {
-                Text(text = "Update", fontSize = 20.sp)
+            }
+
+            if(detailsType == "update") {
+
+                Button(
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth(0.4f),
+                    enabled = noteChange || someButtonClicked || movie.season != season || movie.episode != episode
+                            || movie.favoriteEpisodes != favoriteEpisodes.value.toList()
+                            || resourceState.value != movie.resource,
+                    onClick = {
+                        FirebaseFirestore.getInstance().collection("movies")
+                            .document(movie.id)
+                            .update(
+                                hashMapOf(
+                                    "note" to noteState.value,
+                                    "startDate" to startWatching,
+                                    "finishDate" to finishWatching,
+                                    "season" to season,
+                                    "favoriteEpisodes" to favoriteEpisodes.value,
+                                    "resource" to resourceState.value,
+                                    "episode" to episode
+                                ) as Map<String, Any>
+                            )
+                            .addOnSuccessListener {
+                                navController.navigate(MovierScreens.HomeScreen.name) {
+                                    popUpTo(MovierScreens.UpdateScreen.name) {
+                                        inclusive = true
+                                    }
+                                }
+                            }
+                    }
+                ) {
+                    Text(text = "Update", fontSize = 18.sp)
+                }
             }
         }
     }
 }
 
-@Composable
-fun FavoriteEpisodes(favoriteEpisodes: MutableState<List<Episode>>, onLongPress: (Episode) -> Unit) {
-    LazyRow(){
-        items(favoriteEpisodes.value){ episode->
-            Card(
-                modifier = Modifier
-                    .padding(2.dp)
-                   /* .pointerInput(Unit){
-                                       detectTapGestures(onLongPress = {
-                                           Log.d("TestUpdate", episode.toString())
-                                          onLongPress(episode)
-                                       })
-                    }*/
-                    .clickable {   onLongPress(episode) }
-                    ,
 
-                shape = RoundedCornerShape(20.dp)) {
-                Text(
-                    text = "S:" + episode.season + "E:" + episode.episode,
-                    modifier = Modifier
-                        .padding(4.dp)
-                )
-            }
-        }
-    }
-}

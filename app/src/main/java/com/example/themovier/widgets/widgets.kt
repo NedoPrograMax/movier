@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.themovier.model.Episode
 import com.example.themovier.model.MovierItem
 import com.example.themovier.navigation.MovierScreens
 import com.example.themovier.screens.home.HomeScreenViewModel
@@ -283,5 +284,32 @@ fun FABContent(onTap: () -> Unit) {
         shape = RoundedCornerShape(50.dp),
         backgroundColor = MaterialTheme.colors.background) {
         Icon(imageVector = Icons.Default.Add, contentDescription = "Add Icon", tint = MaterialTheme.colors.onBackground)
+    }
+}
+
+@Composable
+fun FavoriteEpisodes(favoriteEpisodes: MutableState<List<Episode>>, onLongPress: (Episode) -> Unit) {
+    LazyRow(){
+        items(favoriteEpisodes.value){ episode->
+            Card(
+                modifier = Modifier
+                    .padding(2.dp)
+                    /* .pointerInput(Unit){
+                                       detectTapGestures(onLongPress = {
+                                           Log.d("TestUpdate", episode.toString())
+                                          onLongPress(episode)
+                                       })
+                    }*/
+                    .clickable { onLongPress(episode) }
+                ,
+
+                shape = RoundedCornerShape(20.dp)) {
+                Text(
+                    text = "S:" + episode.season + "E:" + episode.episode,
+                    modifier = Modifier
+                        .padding(4.dp)
+                )
+            }
+        }
     }
 }

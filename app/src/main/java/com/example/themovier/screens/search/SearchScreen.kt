@@ -31,13 +31,18 @@ fun SearchScreen(
     navController: NavController,
     viewModel: SearchScreenViewModel = hiltViewModel()
 ){
+
     Scaffold(
         topBar = {
             MovierAppBar(
                 title = "Search Screen",
                 icon = Icons.Default.ArrowBack,
                 onIconClick = {
-                    navController.navigate(MovierScreens.HomeScreen.name)
+                    navController.navigate(MovierScreens.HomeScreen.name) {
+                        popUpTo(MovierScreens.SearchScreen.name) {
+                            inclusive = true
+                        }
+                    }
                 })
         }
     ) {
@@ -70,10 +75,10 @@ fun SearchContent(navController: NavController, viewModel: SearchScreenViewModel
         )
 
         Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row {
+            Row(  verticalAlignment = Alignment.CenterVertically) {
                RadioButton(
                    selected = movieType == "movie",
                    onClick = { movieType = "movie"
@@ -83,7 +88,7 @@ fun SearchContent(navController: NavController, viewModel: SearchScreenViewModel
                 Text(text = "Movie")
             }
 
-            Row {
+            Row(  verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(
                     selected = movieType == "tv",
                     onClick = { movieType = "tv"

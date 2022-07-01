@@ -50,7 +50,11 @@ viewModel: LoginScreenViewModel = androidx.lifecycle.viewmodel.compose.viewModel
                     onFailure = {exception->
                         Toast.makeText(context, exception, Toast.LENGTH_LONG).show()}
                 ){
-                    navController.navigate(MovierScreens.HomeScreen.name)
+                    navController.navigate(MovierScreens.HomeScreen.name) {
+                        popUpTo(MovierScreens.LoginScreen.name) {
+                            inclusive = true
+                        }
+                    }
                 }
             }
         }
@@ -59,7 +63,11 @@ viewModel: LoginScreenViewModel = androidx.lifecycle.viewmodel.compose.viewModel
                 viewModel.createUserWithEmailAndPassword(email, password, onFailure = {exception->
                     Toast.makeText(context, exception, Toast.LENGTH_LONG).show()}
                 ){
-                    navController.navigate(MovierScreens.HomeScreen.name)
+                    navController.navigate(MovierScreens.HomeScreen.name) {
+                        popUpTo(MovierScreens.LoginScreen.name) {
+                            inclusive = true
+                        }
+                    }
                 }
             }
         }

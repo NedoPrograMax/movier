@@ -38,10 +38,19 @@ fun SplashScreen(navController: NavController) {
         delay(1500L)
 
         if(FirebaseAuth.getInstance().currentUser?.email.isNullOrBlank()) {
-            navController.navigate(MovierScreens.LoginScreen.name)
+            navController.navigate(MovierScreens.LoginScreen.name) {
+                popUpTo(MovierScreens.SplashScreen.name) {
+                    inclusive = true
+                }
+            }
         }
         else{
-            navController.navigate(MovierScreens.HomeScreen.name)
+            navController.navigate(MovierScreens.HomeScreen.name) {
+                popUpTo(MovierScreens.SplashScreen.name) {
+                    inclusive = true
+                }
+            }
+           // navController.navigate(MovierScreens.HomeScreen.name)
         }
     }
     Box(
