@@ -1,7 +1,7 @@
 package com.example.themovier.di
 
 import com.example.themovier.constants.Constants
-import com.example.themovier.network.MovieApi
+import com.example.themovier.data.movies.network.MovieApi
 import com.example.themovier.repository.FireRepository
 import com.example.themovier.repository.MovieRepository
 import com.google.firebase.firestore.FirebaseFirestore

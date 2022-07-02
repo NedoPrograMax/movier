@@ -1,10 +1,10 @@
 package com.example.themovier.repository
 
-import com.example.themovier.data.DataOrException
+import com.example.themovier.utils.DataOrException
 import com.example.themovier.model.MovieDetails
 import com.example.themovier.model.MovieFromApi
 import com.example.themovier.model.TvDetails
-import com.example.themovier.network.MovieApi
+import com.example.themovier.data.movies.network.MovieApi
 import javax.inject.Inject
 
 class MovieRepository @Inject constructor(private val api: MovieApi) {

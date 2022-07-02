@@ -4,7 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Movie
 import com.example.themovier.model.BottomNavItem
-import com.example.themovier.navigation.MovierScreens
+import com.example.themovier.ui.navigation.MovierScreens
 
 object Constants {
   //  http://api.themoviedb.org/3/search/movie?api_key={api_key}&query=Jack+Reacher
