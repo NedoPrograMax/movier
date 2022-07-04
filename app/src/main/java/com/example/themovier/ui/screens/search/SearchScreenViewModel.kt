@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.themovier.data.repo.ApiRepoImpl
 import com.example.themovier.domain.models.MovieFromApi
-import com.example.themovier.domain.repositories.ApiRepo
+import com.github.michaelbull.result.onSuccess
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -28,10 +28,16 @@ class SearchScreenViewModel @Inject constructor(private val repository: ApiRepoI
             if (query.isBlank()) return@launch
             try {
                 val response = repository.getMovies(query = query, movieType = movieType)
-                if (response.getOrNull() != null){
-                    data = response.getOrNull()
+                response.onSuccess {
+                    data = it
                     isLoading = false
                 }
+                /*    if (response.getOrNull() != null){
+                        data = response.getOrNull()
+                        isLoading = false
+                    }
+
+                 */
             }catch (e:Exception){
                 Log.e("MovieViewModel", e.message!!)
             }

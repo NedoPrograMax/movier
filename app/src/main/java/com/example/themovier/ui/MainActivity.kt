@@ -7,24 +7,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.*
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.themovier.data.constants.Constants
-import com.example.themovier.domain.models.BottomNavItem
 import com.example.themovier.ui.navigation.MovierNavigation
 import com.example.themovier.ui.theme.TheMovierTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -75,6 +65,7 @@ fun MovierApp(selectImageLauncher: ActivityResultLauncher<Intent>, imageState: M
      */
         }
     }
+
 
 
 }

@@ -28,8 +28,8 @@ import coil.request.ImageRequest
 import com.example.themovier.data.datasource.FirebaseDataSourceImpl
 import com.example.themovier.data.models.Episode
 import com.example.themovier.data.models.MovierItem
-import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.data.utils.formatDate
+import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.widgets.ChooseDialog
 import com.example.themovier.ui.widgets.FavoriteEpisodes
 import com.example.themovier.ui.widgets.InputField
@@ -397,5 +397,6 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
         }
     }
 }
+
 
 

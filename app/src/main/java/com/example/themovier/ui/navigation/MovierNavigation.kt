@@ -14,7 +14,6 @@ import com.example.themovier.ui.screens.about.AboutScreen
 import com.example.themovier.ui.screens.details.DetailsScreen
 import com.example.themovier.ui.screens.home.HomeScreen
 import com.example.themovier.ui.screens.login.LoginScreen
-import com.example.themovier.ui.screens.random.RandomScreen
 import com.example.themovier.ui.screens.search.SearchScreen
 import com.example.themovier.ui.screens.splash.SplashScreen
 import com.example.themovier.ui.screens.update.UpdateScreen
@@ -33,10 +32,6 @@ fun MovierNavigation(
 
         composable(MovierScreens.HomeScreen.name){
             HomeScreen(navController, selectImageLauncher, imageState)
-        }
-
-        composable(MovierScreens.RandomScreen.name){
-            RandomScreen(navController)
         }
 
         composable(MovierScreens.LoginScreen.name){

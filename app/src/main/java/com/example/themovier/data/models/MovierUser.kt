@@ -6,4 +6,5 @@ data class MovierUser(
     val email: String = "",
     val profileUrl: String = "",
     val id: String = ""
-){}
+)
+

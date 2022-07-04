@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.themovier.data.models.MovierItem
 import com.example.themovier.data.models.MovierUser
 import com.example.themovier.data.repo.FireRepoImpl
+import com.github.michaelbull.result.onSuccess
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -31,7 +32,9 @@ class HomeScreenViewModel @Inject constructor(private val repository: FireRepoIm
     private fun getUserData(userId: String){
         viewModelScope.launch {
             loadingUser.value = true
-            dataUser.value = repository.getUserInfo(userId).getOrNull()
+            repository.getUserInfo(userId).onSuccess {
+                dataUser.value = it
+            }
             loadingUser.value = false
         }
     }
@@ -39,7 +42,9 @@ class HomeScreenViewModel @Inject constructor(private val repository: FireRepoIm
      fun getUserMovies(userId: String){
         viewModelScope.launch {
             loadingMovies.value = true
-            dataMovies.value = repository.getUserMovies(userId).getOrNull()
+            repository.getUserMovies(userId).onSuccess {
+                dataMovies.value = it
+            }
             loadingMovies.value = false
         }
     }

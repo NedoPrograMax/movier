@@ -1,7 +1,7 @@
 package com.example.themovier.data.di
 
-import com.example.themovier.data.constants.Constants
 import com.example.themovier.data.apiservice.MovieApi
+import com.example.themovier.data.constants.Constants
 import com.example.themovier.data.repo.ApiRepoImpl
 import com.example.themovier.data.repo.FireRepoImpl
 import com.google.firebase.firestore.FirebaseFirestore
@@ -36,8 +36,4 @@ object AppModule {
    @Singleton
     @Provides
     fun provideApiRepository(api: MovieApi) = ApiRepoImpl(api)
-
-
-
-
 }

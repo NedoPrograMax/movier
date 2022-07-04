@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.themovier.data.models.MovierItem
 import com.example.themovier.data.repo.FireRepoImpl
+import com.github.michaelbull.result.onSuccess
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,10 +21,12 @@ class UpdateViewModel @Inject constructor(private val repository: FireRepoImpl):
     fun getMovie(movieId: String){
         viewModelScope.launch {
             loading.value = true
-            data.value = repository.getMovie(movieId).getOrNull()
-            if (data.value != null) {
-                loading.value = false
-                return@launch
+            repository.getMovie(movieId).onSuccess {
+                data.value = it
+                if (data.value != null) {
+                    loading.value = false
+                    return@launch
+                }
             }
 
             Log.d("RRRR", loading.value.toString())

@@ -10,7 +10,7 @@ import com.example.themovier.data.datasource.FirebaseDataSourceImpl
 import com.example.themovier.data.mappers.MovieMapper
 import com.example.themovier.data.models.MovierItem
 import com.example.themovier.data.repo.ApiRepoImpl
-import com.example.themovier.domain.datasource.FirebaseDataSource
+import com.github.michaelbull.result.onSuccess
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,17 +34,34 @@ class DetailsViewModel @Inject constructor(private val repository: ApiRepoImpl) 
             try {
                 if(movieType == "movie") {
                     val response = repository.getMovieInfo(movieId)
-                    if (response.isSuccess && response.getOrNull() != null) {
-                       data = MovieMapper().toMovierItem(response.getOrNull()!!)
-                        isLoading = false
+                    response.onSuccess { result ->
+                        if (result.title.isNotBlank()) {
+                            data = MovieMapper().toMovierItem(result)
+                            isLoading = false
+                        }
                     }
+                    /*  if (response.isSuccess && response.getOrNull() != null) {
+                         data = MovieMapper().toMovierItem(response.getOrNull()!!)
+                          isLoading = false
+                      }
+
+                     */
                 }
                 else  if(movieType == "tv") {
                     val response = repository.getTvInfo(movieId)
+                    response.onSuccess { result ->
+                        if (result.original_name.isNotBlank()) {
+                            data = MovieMapper().toMovierItem(result)
+                            isLoading = false
+                        }
+                    }
+                    /*
                     if (response.isSuccess && response.getOrNull() != null) {
                         data = MovieMapper().toMovierItem(response.getOrNull()!!)
                         isLoading = false
                     }
+
+                     */
                 }
             }catch (e:Exception){
                 Log.e("DetailsViewModel", e.message!!)

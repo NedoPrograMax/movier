@@ -18,9 +18,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.data.utils.LongPressDraggable
 import com.example.themovier.data.utils.isPermanentlyDenied
+import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.widgets.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -206,6 +206,7 @@ fun HomeContent(navController: NavController, viewModel: HomeScreenViewModel){
 
     }
 }
+
 
 
 

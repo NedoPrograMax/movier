@@ -6,9 +6,12 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.material.*
+import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.RadioButton
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -137,4 +140,5 @@ fun MovieCardInGrid(movie: Movie, navController: NavController, movieType: Strin
                 contentDescription = "Movie Image"
             )
         }
+
 
