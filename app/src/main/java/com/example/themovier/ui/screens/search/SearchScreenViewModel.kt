@@ -6,8 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.themovier.data.repo.ApiRepoImpl
 import com.example.themovier.domain.models.MovieFromApi
+import com.example.themovier.domain.repositories.ApiRepo
 import com.github.michaelbull.result.onSuccess
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SearchScreenViewModel @Inject constructor(private val repository: ApiRepoImpl): ViewModel() {
+class SearchScreenViewModel @Inject constructor(private val repository: ApiRepo) : ViewModel() {
     var data: MovieFromApi? by mutableStateOf(null)
     var isLoading: Boolean by mutableStateOf(true)
 
@@ -23,7 +23,7 @@ class SearchScreenViewModel @Inject constructor(private val repository: ApiRepoI
         searchMovies("Friends", "movie")
     }
 
-     fun searchMovies(query: String, movieType: String) {
+    fun searchMovies(query: String, movieType: String) {
         viewModelScope.launch(Dispatchers.Default) {
             if (query.isBlank()) return@launch
             try {

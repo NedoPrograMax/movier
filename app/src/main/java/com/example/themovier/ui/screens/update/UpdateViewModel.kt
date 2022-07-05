@@ -6,19 +6,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.themovier.data.models.MovierItem
-import com.example.themovier.data.repo.FireRepoImpl
+import com.example.themovier.domain.repositories.FireRepo
 import com.github.michaelbull.result.onSuccess
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class UpdateViewModel @Inject constructor(private val repository: FireRepoImpl): ViewModel() {
+class UpdateViewModel @Inject constructor(private val repository: FireRepo) : ViewModel() {
     var loading = mutableStateOf(false)
     val data: MutableState<MovierItem?> =
         mutableStateOf(null)
 
-    fun getMovie(movieId: String){
+    fun getMovie(movieId: String) {
         viewModelScope.launch {
             loading.value = true
             repository.getMovie(movieId).onSuccess {

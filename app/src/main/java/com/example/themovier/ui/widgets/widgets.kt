@@ -115,7 +115,7 @@ fun AddingArea(isAdding: MutableState<Boolean>, viewModel: HomeScreenViewModel, 
 @Composable
 fun MovieItemCard(
     movieItem: MovierItem,
-    isAdding: MutableState<Boolean>,
+    isAdding: MutableState<Boolean>? = null,
     modifier: Modifier,
     screenHeight: Float,
     navController: NavController,
@@ -125,7 +125,13 @@ fun MovieItemCard(
     val image by remember(movieItem){
         mutableStateOf("https://image.tmdb.org/t/p/w500" + movieItem.posterUrl)
     }
-    DragTarget(modifier = Modifier, dataToDrop = movieItem, isAdding = isAdding, key = Random.nextInt(1, 100)) {
+    if (isAdding != null) {
+        DragTarget(
+            modifier = Modifier,
+            dataToDrop = movieItem,
+            isAdding = isAdding,
+            key = Random.nextInt(1, 100)
+        ) {
 
             AsyncImage(
                 model = ImageRequest.Builder(context)
@@ -137,34 +143,45 @@ fun MovieItemCard(
                     .width((screenWidth * 0.40).dp)
                     .height((screenHeight * 0.34).dp)
                     .padding(2.dp)
-                    .clip(RoundedCornerShape(16.dp)
+                    .clip(
+                        RoundedCornerShape(16.dp)
                     )
-              /*      .pointerInput(Unit){
-                        detectTapGestures (
-                            onTap = { },
-                            onPress = {
-                                showToast(context, movieItem.title)
-                                Log.d("PosterCh", image)
-                            }
-                        )
-                    }
-
-               */
                     .clickable {
                         navController.navigate(MovierScreens.UpdateScreen.name + "/${movieItem.id}")
-                    }
-                               ,
+                    },
 
                 contentDescription = "Movie Image"
             )
         }
+    }
+    else{
+        AsyncImage(
+            model = ImageRequest.Builder(context)
+                .data(image)
+                .crossfade(true)
+                .build(),
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .width((screenWidth * 0.40).dp)
+                .height((screenHeight * 0.34).dp)
+                .padding(2.dp)
+                .clip(
+                    RoundedCornerShape(16.dp)
+                )
+                .clickable {
+                    navController.navigate(MovierScreens.UpdateScreen.name + "/${movieItem.id}")
+                },
+
+            contentDescription = "Movie Image"
+        )
+    }
 }
 
 @Composable
 fun MovieItemsRow(
     movieList: List<MovierItem>,
     cardModifier: Modifier = Modifier,
-    isAdding: MutableState<Boolean>,
+    isAdding: MutableState<Boolean>? = null,
     screenHeight: Float,
     navController : NavController,
     screenWidth: Float

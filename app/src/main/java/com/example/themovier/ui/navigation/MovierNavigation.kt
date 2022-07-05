@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -16,6 +17,7 @@ import com.example.themovier.ui.screens.home.HomeScreen
 import com.example.themovier.ui.screens.login.LoginScreen
 import com.example.themovier.ui.screens.search.SearchScreen
 import com.example.themovier.ui.screens.splash.SplashScreen
+import com.example.themovier.ui.screens.stats.StatsScreen
 import com.example.themovier.ui.screens.update.UpdateScreen
 
 @Composable
@@ -75,6 +77,10 @@ fun MovierNavigation(
             backStackEntry.arguments?.getString("movieId").let {movieId->
                 UpdateScreen(navController, movieId)
             }
+        }
+
+        composable(MovierScreens.StatsScreen.name){
+            StatsScreen(navController, hiltViewModel())
         }
     }
 }

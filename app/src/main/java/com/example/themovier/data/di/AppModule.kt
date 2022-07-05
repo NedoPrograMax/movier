@@ -18,10 +18,12 @@ import javax.inject.Singleton
 @Module
 object AppModule {
 
-    @Singleton
+  /*  @Singleton
     @Provides
     fun provideFireRepository() = FireRepoImpl(queryUser =
     FirebaseFirestore.getInstance().collection("users"))
+
+   */
 
     @Singleton
     @Provides
@@ -33,7 +35,9 @@ object AppModule {
             .create(MovieApi::class.java)
     }
 
-   @Singleton
+  /* @Singleton
     @Provides
     fun provideApiRepository(api: MovieApi) = ApiRepoImpl(api)
+
+   */
 }

@@ -9,9 +9,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -118,6 +116,11 @@ fun HomeScreen(
                             id = MovierScreens.AboutScreen.name,
                             title = "About",
                             icon = Icons.Default.Info
+                        ),
+                        MenuItem(
+                            id = MovierScreens.StatsScreen.name,
+                            title = "Stats",
+                            icon = Icons.Default.WorkHistory
                         )
                     ),
                     onItemClick = {

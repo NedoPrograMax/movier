@@ -9,7 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.themovier.data.datasource.FirebaseDataSourceImpl
 import com.example.themovier.data.mappers.MovieMapper
 import com.example.themovier.data.models.MovierItem
-import com.example.themovier.data.repo.ApiRepoImpl
+import com.example.themovier.domain.repositories.ApiRepo
 import com.github.michaelbull.result.onSuccess
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -17,16 +17,16 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class DetailsViewModel @Inject constructor(private val repository: ApiRepoImpl) : ViewModel() {
+class DetailsViewModel @Inject constructor(private val repository: ApiRepo) : ViewModel() {
     var data: MovierItem? by mutableStateOf(null)
     var isLoading: Boolean by mutableStateOf(true)
     val firebaseDataSource = FirebaseDataSourceImpl()
 
-  /*  init {
-        searchMovies("Friends")
-    }
+    /*  init {
+          searchMovies("Friends")
+      }
 
-   */
+     */
 
     fun searchMovie(movieId: String, movieType: String) {
         viewModelScope.launch(Dispatchers.Default) {

@@ -43,16 +43,7 @@ fun UpdateScreen(navController: NavController, movieId: String?, viewModel: Upda
         mutableStateOf<MovierItem?>(MovierItem())
     }
     val firebaseDataSource = FirebaseDataSourceImpl()
- /*   FirebaseFirestore.getInstance().collection("movies")
-        .document(movieId!!)
-        .get()
-        .addOnSuccessListener {document->
-            if(document != null) {
-                movie = document.toObject(MovierItem::class.java)
-            }
-        }
 
-  */
     viewModel.getMovie(movieId!!)
     if(viewModel.data.value != null && viewModel.data.value?.title?.isBlank()!!){
         LinearProgressIndicator()
@@ -216,6 +207,19 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                 }
                 else{
                     Text(text = "Finished Watching at: $finishWatching", fontSize = 20.sp)
+                    if(detailsType == "update") {
+                        Button(
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.padding(vertical = 6.dp),
+                            onClick = {
+                                someButtonClicked = true
+                                startWatching = formatDate(Timestamp.now())
+                                finishWatching = ""
+                            }
+                        ) {
+                            Text(text = "Start Watching Again", fontSize = 14.sp)
+                        }
+                    }
                 }
             }
 
@@ -383,9 +387,18 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                                 ) as Map<String, Any>
                             )
                             .addOnSuccessListener {
-                                navController.navigate(MovierScreens.HomeScreen.name) {
-                                    popUpTo(MovierScreens.UpdateScreen.name) {
-                                        inclusive = true
+                                if(finishWatching.isBlank()) {
+                                    navController.navigate(MovierScreens.HomeScreen.name) {
+                                        popUpTo(MovierScreens.UpdateScreen.name) {
+                                            inclusive = true
+                                        }
+                                    }
+                                }
+                                else{
+                                    navController.navigate(MovierScreens.StatsScreen.name) {
+                                        popUpTo(MovierScreens.UpdateScreen.name) {
+                                            inclusive = true
+                                        }
                                     }
                                 }
                             }

@@ -108,10 +108,8 @@ fun DetailsScreen(
 @Composable
 fun DetailsContent(viewModel: DetailsViewModel){
     val context = LocalContext.current
-    val scroll = rememberScrollState()
 
     LazyColumn(
-      //  modifier = Modifier.scrollable(scroll, orientation = Orientation.Vertical),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
