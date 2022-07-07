@@ -32,13 +32,8 @@ class SearchScreenViewModel @Inject constructor(private val repository: ApiRepo)
                     data = it
                     isLoading = false
                 }
-                /*    if (response.getOrNull() != null){
-                        data = response.getOrNull()
-                        isLoading = false
-                    }
 
-                 */
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 Log.e("MovieViewModel", e.message!!)
             }
         }

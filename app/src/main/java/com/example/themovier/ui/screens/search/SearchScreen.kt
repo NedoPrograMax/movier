@@ -31,8 +31,8 @@ import com.example.themovier.ui.widgets.MovierAppBar
 @Composable
 fun SearchScreen(
     navController: NavController,
-    viewModel: SearchScreenViewModel = hiltViewModel()
-){
+    viewModel: SearchScreenViewModel = hiltViewModel(),
+) {
 
     Scaffold(
         topBar = {
@@ -55,10 +55,10 @@ fun SearchScreen(
 
 @Composable
 fun SearchContent(navController: NavController, viewModel: SearchScreenViewModel) {
-    val searchQuery = rememberSaveable{
+    val searchQuery = rememberSaveable {
         mutableStateOf("")
     }
-    var movieType by remember{
+    var movieType by rememberSaveable {
         mutableStateOf("movie")
     }
 
@@ -80,46 +80,53 @@ fun SearchContent(navController: NavController, viewModel: SearchScreenViewModel
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(  verticalAlignment = Alignment.CenterVertically) {
-               RadioButton(
-                   selected = movieType == "movie",
-                   onClick = { movieType = "movie"
-                       viewModel.searchMovies(searchQuery.value.ifEmpty { "Friends" }, movieType = movieType)
-                             },
-               )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = movieType == "movie",
+                    onClick = {
+                        movieType = "movie"
+                        viewModel.searchMovies(searchQuery.value.ifEmpty { "Friends" },
+                            movieType = movieType)
+                    },
+                )
                 Text(text = "Movie")
             }
 
-            Row(  verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 RadioButton(
                     selected = movieType == "tv",
-                    onClick = { movieType = "tv"
-                        viewModel.searchMovies(searchQuery.value.ifEmpty { "Friends" }, movieType = movieType)
-                              },
+                    onClick = {
+                        movieType = "tv"
+                        viewModel.searchMovies(searchQuery.value.ifEmpty { "Friends" },
+                            movieType = movieType)
+                    },
                 )
                 Text(text = "TV Show")
             }
         }
-        
-        if (viewModel.isLoading){
+
+        if (viewModel.isLoading) {
             LinearProgressIndicator()
-        }
-        else{
+        } else {
             MoviesColumn(viewModel = viewModel, navController, movieType = movieType)
         }
-        
+
 
     }
 }
 
 @Composable
-fun MoviesColumn(viewModel: SearchScreenViewModel, navController: NavController, movieType: String){
+fun MoviesColumn(
+    viewModel: SearchScreenViewModel,
+    navController: NavController,
+    movieType: String,
+) {
     val movieList = viewModel.data!!.results
     LazyVerticalGrid(
         columns = GridCells.Fixed(3),
         modifier = Modifier.fillMaxSize()
-    ){
-        items(movieList){movie->
+    ) {
+        items(movieList) { movie ->
             MovieCardInGrid(movie, navController, movieType = movieType)
         }
     }
@@ -128,17 +135,17 @@ fun MoviesColumn(viewModel: SearchScreenViewModel, navController: NavController,
 @Composable
 fun MovieCardInGrid(movie: Movie, navController: NavController, movieType: String) {
 
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data("https://image.tmdb.org/t/p/w500" + movie.poster_path)
-                    .crossfade(true)
-                    .build(),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable { navController.navigate(MovierScreens.DetailsScreen.name + "/${movie.id}" + "/${movieType}") },
-                contentScale = ContentScale.Fit,
-                contentDescription = "Movie Image"
-            )
-        }
+    AsyncImage(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data("https://image.tmdb.org/t/p/w500" + movie.poster_path)
+            .crossfade(true)
+            .build(),
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable { navController.navigate(MovierScreens.DetailsScreen.name + "/${movie.id}" + "/${movieType}") },
+        contentScale = ContentScale.Fit,
+        contentDescription = "Movie Image"
+    )
+}
 
 

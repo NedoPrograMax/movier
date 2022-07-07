@@ -33,29 +33,32 @@ fun DrawerHeader(
     userDocId: String,
     enabled: Boolean,
     name: String,
-    onImageClick: () -> Unit
-){
+    onImageClick: () -> Unit,
+) {
     var imageUrlMy = imageUrl
-    val nameState = remember{
+    val nameState = remember {
         mutableStateOf(name)
     }
-    var imageLoading by remember(enabled){
+    var imageLoading by remember(enabled) {
         mutableStateOf(enabled)
     }
     val firebaseDataSource = FirebaseDataSourceImpl()
 
 
     val context = LocalContext.current
-   Column(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 10.dp, bottom = 40.dp),
-       verticalArrangement = Arrangement.Center,
-       horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AsyncImage(
             model = ImageRequest.Builder(context)
-                .data(imageUrl.ifBlank { ContextCompat.getDrawable(context, R.drawable.ic_baseline_account_circle_24) })
+                .data(imageUrl.ifBlank {
+                    ContextCompat.getDrawable(context,
+                        R.drawable.ic_baseline_account_circle_24)
+                })
                 .crossfade(true)
                 .placeholder(R.drawable.ic_baseline_account_circle_24)
                 .build(),
@@ -65,88 +68,84 @@ fun DrawerHeader(
                 .size(64.dp)
                 .clickable {
                     onImageClick()
-                }
-            ,
+                },
             contentDescription = "Profile Icon")
 
-    //   Text(text = "Name", fontSize = 24.sp)
-       TextField(
-           value = nameState.value,
-           onValueChange = {nameState.value = it},
-       modifier = Modifier.fillMaxWidth(0.6f),
-           textStyle = TextStyle(
-               fontSize = 22.sp,
-               textAlign = TextAlign.Center
-           ),
-           colors = TextFieldDefaults.textFieldColors(
-               backgroundColor = Color.Transparent,
-           )
-           )
+        //   Text(text = "Name", fontSize = 24.sp)
+        TextField(
+            value = nameState.value,
+            onValueChange = { nameState.value = it },
+            modifier = Modifier.fillMaxWidth(0.6f),
+            textStyle = TextStyle(
+                fontSize = 22.sp,
+                textAlign = TextAlign.Center
+            ),
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = Color.Transparent,
+            )
+        )
 
-       Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-       Button(
-           modifier = Modifier.fillMaxWidth(0.6f),
-           enabled = (imageUrlMy.isNotBlank() && enabled) || (nameState.value != name),
-           onClick = {
-               if(enabled && nameState.value != name) {
-                   val storageReference = FirebaseStorage.getInstance().reference
-                   val ref = storageReference.child("myImages/" + UUID.randomUUID().toString())
-                   ref.putFile(imageUrlMy.toUri()).addOnSuccessListener { taskSnapshot ->
-                       if (taskSnapshot.task.isSuccessful) {
-                           taskSnapshot.task.snapshot.metadata!!.reference!!.downloadUrl.addOnSuccessListener { result ->
-                               imageUrlMy = result.toString()
-                               firebaseDataSource.updateUserProfileData(
-                                   hashMapOf(
-                                       "profileUrl" to imageUrlMy,
-                                       "name" to nameState.value,
-                                   ) as Map<String, Any>,
-                                   userDocId
-                               )
-                               Log.i("ImageTesti", imageUrlMy)
-                           }
+        Button(
+            modifier = Modifier.fillMaxWidth(0.6f),
+            enabled = (imageUrlMy.isNotBlank() && enabled) || (nameState.value != name),
+            onClick = {
+                if (enabled && nameState.value != name) {
+                    val storageReference = FirebaseStorage.getInstance().reference
+                    val ref = storageReference.child("myImages/" + UUID.randomUUID().toString())
+                    ref.putFile(imageUrlMy.toUri()).addOnSuccessListener { taskSnapshot ->
+                        if (taskSnapshot.task.isSuccessful) {
+                            taskSnapshot.task.snapshot.metadata!!.reference!!.downloadUrl.addOnSuccessListener { result ->
+                                imageUrlMy = result.toString()
+                                firebaseDataSource.updateUserProfileData(
+                                    hashMapOf(
+                                        "profileUrl" to imageUrlMy,
+                                        "name" to nameState.value,
+                                    ) as Map<String, Any>,
+                                    userDocId
+                                )
+                                Log.i("ImageTesti", imageUrlMy)
+                            }
 
-                       }
-                   }
-                       .addOnFailureListener {
-                           Log.e("ImageTest", it.message!!)
-                       }
-               }
-               else if(enabled) {
-                   val storageReference = FirebaseStorage.getInstance().reference
-                   val ref = storageReference.child("myImages/" + UUID.randomUUID().toString())
-                   ref.putFile(imageUrlMy.toUri()).addOnSuccessListener { taskSnapshot ->
-                       if (taskSnapshot.task.isSuccessful) {
-                           taskSnapshot.task.snapshot.metadata!!.reference!!.downloadUrl.addOnSuccessListener { result ->
-                               imageUrlMy = result.toString()
-                               firebaseDataSource.updateUserProfileData(
-                                   hashMapOf(
-                                       "profileUrl" to imageUrlMy
-                                   ) as Map<String, Any>,
-                                   userDocId
-                               )
-                               Log.i("ImageTesti", imageUrlMy)
-                           }
+                        }
+                    }
+                        .addOnFailureListener {
+                            Log.e("ImageTest", it.message!!)
+                        }
+                } else if (enabled) {
+                    val storageReference = FirebaseStorage.getInstance().reference
+                    val ref = storageReference.child("myImages/" + UUID.randomUUID().toString())
+                    ref.putFile(imageUrlMy.toUri()).addOnSuccessListener { taskSnapshot ->
+                        if (taskSnapshot.task.isSuccessful) {
+                            taskSnapshot.task.snapshot.metadata!!.reference!!.downloadUrl.addOnSuccessListener { result ->
+                                imageUrlMy = result.toString()
+                                firebaseDataSource.updateUserProfileData(
+                                    hashMapOf(
+                                        "profileUrl" to imageUrlMy
+                                    ) as Map<String, Any>,
+                                    userDocId
+                                )
+                                Log.i("ImageTesti", imageUrlMy)
+                            }
 
-                       }
-                   }
-                       .addOnFailureListener {
-                           Log.e("ImageTest", it.message!!)
-                       }
-               }
-
-               else if(nameState.value != name){
-                   firebaseDataSource.updateUserProfileData(
-                       hashMapOf(
-                           "name" to imageUrlMy
-                       ) as Map<String, Any>,
-                       userDocId
-                   )
-               }
-               }
-       ) {
-                Text(text = "Update")
-       }
+                        }
+                    }
+                        .addOnFailureListener {
+                            Log.e("ImageTest", it.message!!)
+                        }
+                } else if (nameState.value != name) {
+                    firebaseDataSource.updateUserProfileData(
+                        hashMapOf(
+                            "name" to imageUrlMy
+                        ) as Map<String, Any>,
+                        userDocId
+                    )
+                }
+            }
+        ) {
+            Text(text = "Update")
+        }
     }
 }
 
@@ -155,10 +154,10 @@ fun DrawerBody(
     items: List<MenuItem>,
     modifier: Modifier = Modifier,
     itemTextStyle: TextStyle = TextStyle(fontSize = 18.sp),
-    onItemClick: (MenuItem) -> Unit
-){
-    LazyColumn(modifier){
-        items(items){item->
+    onItemClick: (MenuItem) -> Unit,
+) {
+    LazyColumn(modifier) {
+        items(items) { item ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

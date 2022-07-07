@@ -9,7 +9,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
 
-class LoginScreenViewModel: ViewModel() {
+class LoginScreenViewModel : ViewModel() {
     private val auth: FirebaseAuth = Firebase.auth
     private val firebaseDataSource = FirebaseDataSourceImpl()
 
@@ -17,44 +17,42 @@ class LoginScreenViewModel: ViewModel() {
         email: String,
         password: String,
         onFailure: (String) -> Unit = {},
-        home: () -> Unit
-    ) = viewModelScope.launch{
-            auth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener {task->
-                    if(task.isSuccessful){
-                        firebaseDataSource.createUser(email = task.result.user?.email!!, userId = auth.currentUser?.uid!!)
-                        home()
-                    }
-                    else{
-                        task.exception?.message?.let { onFailure(it) }
-                    }
+        home: () -> Unit,
+    ) = viewModelScope.launch {
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    firebaseDataSource.createUser(email = task.result.user?.email!!,
+                        userId = auth.currentUser?.uid!!)
+                    home()
+                } else {
+                    task.exception?.message?.let { onFailure(it) }
                 }
-                .addOnFailureListener {
-                    it.message?.let { it1 -> onFailure(it1) }
-                }
-        }
+            }
+            .addOnFailureListener {
+                it.message?.let { it1 -> onFailure(it1) }
+            }
+    }
 
     fun signInWithEmailAndPassword(
         email: String,
         password: String,
         onFailure: (String) -> Unit = {},
-        home: () -> Unit
-    )
-            = viewModelScope.launch{
+        home: () -> Unit,
+    ) = viewModelScope.launch {
         try {
             auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener {task ->
-                    if(task.isSuccessful){
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
                         home()
-                    }
-                    else{
+                    } else {
                         task.exception?.message?.let { onFailure(it) }
                     }
                 }
                 .addOnFailureListener {
                     it.message?.let { it1 -> onFailure(it1) }
                 }
-        }catch (e:Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }

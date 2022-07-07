@@ -18,18 +18,17 @@ import androidx.compose.ui.window.Dialog
 @Composable
 fun ChooseDialog(
     setShowDialog: (Boolean) -> Unit,
-    listOfStrings : List<String>,
-    onItemClick: (String) -> Unit
-)
-{
+    listOfStrings: List<String>,
+    onItemClick: (String) -> Unit,
+) {
     Dialog(onDismissRequest = { setShowDialog(false) }) {
         Surface(
             shape = RoundedCornerShape(10.dp),
             modifier = Modifier.fillMaxHeight(0.8f)
         ) {
-            Box(contentAlignment = Alignment.Center){
+            Box(contentAlignment = Alignment.Center) {
                 LazyColumn(modifier = Modifier.padding(10.dp)) {
-                    items(listOfStrings){item->
+                    items(listOfStrings) { item ->
                         TextButton(onClick = { onItemClick(item) }) {
                             Text(text = item)
                         }

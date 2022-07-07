@@ -18,7 +18,7 @@ import com.example.themovier.ui.widgets.MovieItemsRow
 import com.example.themovier.ui.widgets.MovierAppBar
 
 @Composable
-fun StatsScreen(navController: NavController, viewModel: HomeScreenViewModel){
+fun StatsScreen(navController: NavController, viewModel: HomeScreenViewModel) {
     Scaffold(
         topBar = {
             MovierAppBar(
@@ -35,17 +35,16 @@ fun StatsScreen(navController: NavController, viewModel: HomeScreenViewModel){
         }
     ) {
         it
-        if (viewModel.loadingMovies.value && viewModel.dataMovies.value.isNullOrEmpty()){
+        if (viewModel.loadingMovies.value && viewModel.dataMovies.value.isNullOrEmpty()) {
             LinearProgressIndicator()
-        }
-        else {
+        } else {
             StatsContent(navController = navController, viewModel)
         }
     }
 }
 
 @Composable
-fun StatsContent(navController: NavController, viewModel: HomeScreenViewModel){
+fun StatsContent(navController: NavController, viewModel: HomeScreenViewModel) {
 
     val displayMetrics = LocalContext.current.resources.displayMetrics
     val screenHeight = displayMetrics.heightPixels / displayMetrics.density

@@ -23,42 +23,42 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(navController: NavController) {
-    val scale = remember{
+    val scale = remember {
         Animatable(0f)
     }
-    LaunchedEffect(key1 = true){
+    LaunchedEffect(key1 = true) {
         scale.animateTo(
             targetValue = 0.9f,
-        animationSpec = tween(
-            durationMillis = 1000,
-            easing = {
-                OvershootInterpolator(2f).getInterpolation(it)
-            }
-        ))
+            animationSpec = tween(
+                durationMillis = 1000,
+                easing = {
+                    OvershootInterpolator(2f).getInterpolation(it)
+                }
+            ))
         delay(1500L)
 
-        if(FirebaseAuth.getInstance().currentUser?.email.isNullOrBlank()) {
+        if (FirebaseAuth.getInstance().currentUser?.email.isNullOrBlank()) {
             navController.navigate(MovierScreens.LoginScreen.name) {
                 popUpTo(MovierScreens.SplashScreen.name) {
                     inclusive = true
                 }
             }
-        }
-        else{
+        } else {
             navController.navigate(MovierScreens.HomeScreen.name) {
                 popUpTo(MovierScreens.SplashScreen.name) {
                     inclusive = true
                 }
             }
-           // navController.navigate(MovierScreens.HomeScreen.name)
         }
     }
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize().scale(scale.value)) {
+        modifier = Modifier
+            .fillMaxSize()
+            .scale(scale.value)) {
         Text(
             text = stringResource(id = R.string.app_name),
-        fontStyle = FontStyle.Italic,
-        fontSize = 60.sp)
+            fontStyle = FontStyle.Italic,
+            fontSize = 60.sp)
     }
 }

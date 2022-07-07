@@ -1,5 +1,8 @@
 package com.example.themovier.data.models
 
+import com.example.themovier.domain.models.Genre
+import com.google.firebase.firestore.Exclude
+
 data class MovierItem(
     val title: String = "",
     val idDb: Int = 0,
@@ -14,23 +17,19 @@ data class MovierItem(
     val type: String = "movie",
     val startDate: String = "",
     val finishDate: String = "",
-    val favoriteEpisodes : List<Episode> = listOf(),
-    val seasons : List<Episode> = listOf(),
-    val description: String = ""
-    )
-/*
-val unwatchedMovieList = listOf(
-    MovierItem( "Pizza"),
-    MovierItem( "French toast"),
-    MovierItem( "Chocolate cake"),
+    val favoriteEpisodes: List<Episode> = listOf(),
+    @Exclude
+    var seasons: List<Episode> = listOf(),
+    @Exclude
+    var description: String = "",
+    @Exclude
+    var genres: List<Genre> = listOf(),
+    @Exclude
+    var status: String = "",
+    @Exclude
+    var language: String = "",
+    @Exclude
+    var releaseDate: String = "",
 )
-
-val watchedMovieList = listOf(
-    MovierItem( "Hamburger"),
-    MovierItem( "Hot dog"),
-    MovierItem( "Chicken soup"),
-)
-
- */
 
 

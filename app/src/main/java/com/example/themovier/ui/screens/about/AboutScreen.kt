@@ -27,7 +27,7 @@ fun AboutScreen(navController: NavController) {
             MovierAppBar(
                 title = "About",
                 icon = Icons.Default.ArrowBack,
-                onIconClick = {navController.popBackStack()}
+                onIconClick = { navController.popBackStack() }
             )
         }
     ) {

@@ -34,43 +34,47 @@ import com.example.themovier.ui.widgets.PasswordInput
 @Composable
 fun LoginScreen(
     navController: NavController,
-viewModel: LoginScreenViewModel = androidx.lifecycle.viewmodel.compose.viewModel()){
+    viewModel: LoginScreenViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+) {
     val context = LocalContext.current
     val showLoginForm = rememberSaveable {
         mutableStateOf(true)
     }
     Scaffold(
-        topBar = {MovierAppBar(title = if(showLoginForm.value) "Login" else "SignUp")}
+        topBar = { MovierAppBar(title = if (showLoginForm.value) "Login" else "SignUp") }
     ) {
         Column() {
-        it
-        if(showLoginForm.value) {
-            UserForm(navController, isCreateAccount = false) { email, password ->
-                viewModel.signInWithEmailAndPassword(email, password,
-                    onFailure = {exception->
-                        Toast.makeText(context, exception, Toast.LENGTH_LONG).show()}
-                ){
-                    navController.navigate(MovierScreens.HomeScreen.name) {
-                        popUpTo(MovierScreens.LoginScreen.name) {
-                            inclusive = true
+            it
+            if (showLoginForm.value) {
+                UserForm(navController, isCreateAccount = false) { email, password ->
+                    viewModel.signInWithEmailAndPassword(email, password,
+                        onFailure = { exception ->
+                            Toast.makeText(context, exception, Toast.LENGTH_LONG).show()
+                        }
+                    ) {
+                        navController.navigate(MovierScreens.HomeScreen.name) {
+                            popUpTo(MovierScreens.LoginScreen.name) {
+                                inclusive = true
+                            }
+                        }
+                    }
+                }
+            } else {
+                UserForm(navController, isCreateAccount = true) { email, password ->
+                    viewModel.createUserWithEmailAndPassword(email,
+                        password,
+                        onFailure = { exception ->
+                            Toast.makeText(context, exception, Toast.LENGTH_LONG).show()
+                        }
+                    ) {
+                        navController.navigate(MovierScreens.HomeScreen.name) {
+                            popUpTo(MovierScreens.LoginScreen.name) {
+                                inclusive = true
+                            }
                         }
                     }
                 }
             }
-        }
-        else {
-            UserForm(navController, isCreateAccount = true) { email, password ->
-                viewModel.createUserWithEmailAndPassword(email, password, onFailure = {exception->
-                    Toast.makeText(context, exception, Toast.LENGTH_LONG).show()}
-                ){
-                    navController.navigate(MovierScreens.HomeScreen.name) {
-                        popUpTo(MovierScreens.LoginScreen.name) {
-                            inclusive = true
-                        }
-                    }
-                }
-            }
-        }
 
             Spacer(modifier = Modifier.height(15.dp))
             Row(
@@ -88,8 +92,8 @@ viewModel: LoginScreenViewModel = androidx.lifecycle.viewmodel.compose.viewModel
                     color = MaterialTheme.colors.secondaryVariant)
             }
         }
-        }
     }
+}
 
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -97,12 +101,12 @@ viewModel: LoginScreenViewModel = androidx.lifecycle.viewmodel.compose.viewModel
 fun UserForm(
     navController: NavController,
     isCreateAccount: Boolean,
-    onDone: (String, String) -> Unit
+    onDone: (String, String) -> Unit,
 ) {
-    val email = rememberSaveable{
+    val email = rememberSaveable {
         mutableStateOf("")
     }
-    val password = rememberSaveable{
+    val password = rememberSaveable {
         mutableStateOf("")
     }
     val passwordVisibility = rememberSaveable {
@@ -122,12 +126,12 @@ fun UserForm(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if(isCreateAccount){
+        if (isCreateAccount) {
             Text(text = "Please enter valid email and password at least 6 letters long",
-            modifier = Modifier.padding(4.dp))
+                modifier = Modifier.padding(4.dp))
         }
         EmailInput(emailState = email, enabled = true,
-            onAction = KeyboardActions {passwordFocusRequest.requestFocus()})
+            onAction = KeyboardActions { passwordFocusRequest.requestFocus() })
 
         PasswordInput(
             modifier = Modifier.focusRequester(passwordFocusRequest),
@@ -143,9 +147,9 @@ fun UserForm(
         )
 
         SubmitButton(
-            textId = if(isCreateAccount) "Create Account" else "Login",
+            textId = if (isCreateAccount) "Create Account" else "Login",
             validInputs = valid
-        ){
+        ) {
             onDone(email.value.trim(), password.value.trim())
             keyboardController?.hide()
         }
@@ -156,7 +160,7 @@ fun UserForm(
 fun SubmitButton(
     textId: String,
     validInputs: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Button(
         onClick = onClick,

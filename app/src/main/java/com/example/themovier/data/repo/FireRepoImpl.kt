@@ -11,7 +11,7 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class FireRepoImpl @Inject constructor() : FireRepo {
-    private val queryUser =  FirebaseFirestore.getInstance().collection("users")
+    private val queryUser = FirebaseFirestore.getInstance().collection("users")
     override suspend fun getUserInfo(userId: String): Result<MovierUser, Throwable> {
         return runCatching {
             queryUser.whereEqualTo("userId", userId).get().await().map { document ->

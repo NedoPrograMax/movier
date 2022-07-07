@@ -9,7 +9,7 @@ import com.google.firebase.Timestamp
 
 
 @OptIn(ExperimentalPermissionsApi::class)
-fun PermissionState.isPermanentlyDenied(): Boolean{
+fun PermissionState.isPermanentlyDenied(): Boolean {
     return !status.shouldShowRationale && !status.isGranted
 }
 

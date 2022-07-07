@@ -1,10 +1,7 @@
-package com.example.themovier.data.di
+package com.example.themovier.ui.di
 
 import com.example.themovier.data.apiservice.MovieApi
 import com.example.themovier.data.constants.Constants
-import com.example.themovier.data.repo.ApiRepoImpl
-import com.example.themovier.data.repo.FireRepoImpl
-import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,12 +15,6 @@ import javax.inject.Singleton
 @Module
 object AppModule {
 
-  /*  @Singleton
-    @Provides
-    fun provideFireRepository() = FireRepoImpl(queryUser =
-    FirebaseFirestore.getInstance().collection("users"))
-
-   */
 
     @Singleton
     @Provides
@@ -35,9 +26,4 @@ object AppModule {
             .create(MovieApi::class.java)
     }
 
-  /* @Singleton
-    @Provides
-    fun provideApiRepository(api: MovieApi) = ApiRepoImpl(api)
-
-   */
 }

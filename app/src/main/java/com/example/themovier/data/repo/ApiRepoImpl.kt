@@ -9,11 +9,11 @@ import com.github.michaelbull.result.runCatching
 import javax.inject.Inject
 
 class ApiRepoImpl @Inject constructor(
-    private val api: MovieApi
-): ApiRepo {
+    private val api: MovieApi,
+) : ApiRepo {
     override suspend fun getMovies(
         query: String,
-        movieType: String
+        movieType: String,
     ): com.github.michaelbull.result.Result<MovieFromApi, Throwable> {
         return runCatching {
             api.getAllMovies(query = query, movieType = movieType)

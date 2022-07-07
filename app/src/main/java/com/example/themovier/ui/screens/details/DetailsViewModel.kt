@@ -10,6 +10,7 @@ import com.example.themovier.data.datasource.FirebaseDataSourceImpl
 import com.example.themovier.data.mappers.MovieMapper
 import com.example.themovier.data.models.MovierItem
 import com.example.themovier.domain.repositories.ApiRepo
+import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.onSuccess
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -20,7 +21,7 @@ import javax.inject.Inject
 class DetailsViewModel @Inject constructor(private val repository: ApiRepo) : ViewModel() {
     var data: MovierItem? by mutableStateOf(null)
     var isLoading: Boolean by mutableStateOf(true)
-    val firebaseDataSource = FirebaseDataSourceImpl()
+    private val firebaseDataSource = FirebaseDataSourceImpl()
 
     /*  init {
           searchMovies("Friends")
@@ -29,51 +30,43 @@ class DetailsViewModel @Inject constructor(private val repository: ApiRepo) : Vi
      */
 
     fun searchMovie(movieId: String, movieType: String) {
+        Log.d("DetailsViewModel", "$movieId $movieType")
         viewModelScope.launch(Dispatchers.Default) {
             if (movieId.isBlank()) return@launch
             try {
-                if(movieType == "movie") {
+                if (movieType == "movie") {
                     val response = repository.getMovieInfo(movieId)
                     response.onSuccess { result ->
                         if (result.title.isNotBlank()) {
                             data = MovieMapper().toMovierItem(result)
+                            Log.d("DetailsViewModel", data.toString())
                             isLoading = false
                         }
                     }
-                    /*  if (response.isSuccess && response.getOrNull() != null) {
-                         data = MovieMapper().toMovierItem(response.getOrNull()!!)
-                          isLoading = false
-                      }
-
-                     */
-                }
-                else  if(movieType == "tv") {
+                } else if (movieType == "tv") {
                     val response = repository.getTvInfo(movieId)
                     response.onSuccess { result ->
                         if (result.original_name.isNotBlank()) {
                             data = MovieMapper().toMovierItem(result)
+                            Log.d("DetailsViewModel", data.toString())
                             isLoading = false
                         }
                     }
-                    /*
-                    if (response.isSuccess && response.getOrNull() != null) {
-                        data = MovieMapper().toMovierItem(response.getOrNull()!!)
-                        isLoading = false
-                    }
-
-                     */
+                        .onFailure {
+                            Log.d("DetailsViewModel", it.message!!)
+                        }
                 }
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 Log.e("DetailsViewModel", e.message!!)
             }
         }
     }
 
-    fun createMovie(movie: MovierItem){
+    fun createMovie(movie: MovierItem) {
         firebaseDataSource.createMovie(movie)
     }
 
-    fun deleteMovie(movieId: String){
+    fun deleteMovie(movieId: String) {
         firebaseDataSource.deleteMovie(movieId)
     }
 }

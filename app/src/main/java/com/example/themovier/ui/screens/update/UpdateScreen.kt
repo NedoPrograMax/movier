@@ -30,57 +30,72 @@ import com.example.themovier.data.models.Episode
 import com.example.themovier.data.models.MovierItem
 import com.example.themovier.data.utils.formatDate
 import com.example.themovier.ui.navigation.MovierScreens
-import com.example.themovier.ui.widgets.ChooseDialog
-import com.example.themovier.ui.widgets.FavoriteEpisodes
-import com.example.themovier.ui.widgets.InputField
-import com.example.themovier.ui.widgets.MovierAppBar
+import com.example.themovier.ui.screens.details.DetailsViewModel
+import com.example.themovier.ui.widgets.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
-fun UpdateScreen(navController: NavController, movieId: String?, viewModel: UpdateViewModel = hiltViewModel()){
-    var movie by remember{
+fun UpdateScreen(
+    navController: NavController,
+    movieId: String?,
+    viewModel: UpdateViewModel = hiltViewModel(),
+    detailsViewModel: DetailsViewModel = hiltViewModel(),
+) {
+    var movie by remember {
         mutableStateOf<MovierItem?>(MovierItem())
     }
     val firebaseDataSource = FirebaseDataSourceImpl()
 
     viewModel.getMovie(movieId!!)
-    if(viewModel.data.value != null && viewModel.data.value?.title?.isBlank()!!){
+    if (viewModel.data.value == null || viewModel.data.value?.title?.isBlank()!!) {
         LinearProgressIndicator()
-    }
-
-    else{
+    } else {
         movie = viewModel.data.value
-       Scaffold(
-           topBar = {
-               MovierAppBar(
-                   title = "Update",
-                   icon = Icons.Default.ArrowBack,
-                   onIconClick = {navController.popBackStack()},
-                   actions = {
-                       IconButton(onClick = {
-                           firebaseDataSource.deleteMovie(movieId)
-                           navController.popBackStack()
-                       }) {
-                           Icon(
-                               imageVector = Icons.Default.Delete,
-                               contentDescription = "Delete Icon",
-                           tint = Color.Red.copy(alpha = 0.8f))
-                       }
-                   }
-               )
-           }
-       ) {padding->
-           padding
-           movie?.let { UpdateContent(navController, it) }
-       }
+        detailsViewModel.searchMovie(movieId = movie!!.idDb.toString(), movieType = movie!!.type)
+        if (detailsViewModel.data == null || detailsViewModel.data!!.title.isBlank()) {
+            CircularProgressIndicator()
+        } else {
+            detailsViewModel.data?.apply {
+                movie!!.status = status
+                movie!!.language = language
+                movie!!.description = description
+                movie!!.genres = genres
+                movie!!.seasons = seasons
+                movie!!.releaseDate = releaseDate
+            }
+            Scaffold(
+                topBar = {
+                    MovierAppBar(
+                        title = "Update",
+                        icon = Icons.Default.ArrowBack,
+                        onIconClick = { navController.popBackStack() },
+                        actions = {
+                            IconButton(onClick = {
+                                firebaseDataSource.deleteMovie(movieId)
+                                navController.popBackStack()
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Icon",
+                                    tint = Color.Red.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
+                    )
+                }
+            ) { padding ->
+                padding
+                movie?.let { UpdateContent(navController, it) }
+            }
+        }
     }
 }
 
 @Composable
-fun UpdateContent(navController: NavController, movie: MovierItem){
+fun UpdateContent(navController: NavController, movie: MovierItem) {
     val context = LocalContext.current
-    var detailsType by remember{
+    var detailsType by remember {
         mutableStateOf("details")
     }
     LazyColumn(
@@ -99,30 +114,32 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                 contentDescription = "Movie Image"
             )
 
-               Text(
-               text = movie.title,
-               modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-               style = MaterialTheme.typography.h5,
-               fontWeight = FontWeight.Bold
-           )
+            Text(
+                text = movie.title,
+                modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
+                style = MaterialTheme.typography.h5,
+                fontWeight = FontWeight.Bold
+            )
 
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(  verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = detailsType == "details",
-                        onClick = { detailsType = "details"
+                        onClick = {
+                            detailsType = "details"
                         },
                     )
                     Text(text = "Details")
                 }
 
-                Row(  verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = detailsType == "update",
-                        onClick = { detailsType = "update"
+                        onClick = {
+                            detailsType = "update"
                         },
                     )
                     Text(text = "Update")
@@ -131,41 +148,34 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
 
 
             if (detailsType == "details") {
-                Text(
-                    text = movie.description,
-                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-                    style = MaterialTheme.typography.h6,
-                    fontWeight = FontWeight.Light
-                )
+                movie.MovieDescription()
             }
 
 
-
-            val noteState = remember{
+            val noteState = remember {
                 mutableStateOf(movie.note)
             }
 
-            val noteChange = remember(noteState.value){
+            val noteChange = remember(noteState.value) {
                 noteState.value != movie.note
             }
 
-            var startWatching by remember{ mutableStateOf(movie.startDate)}
+            var startWatching by remember { mutableStateOf(movie.startDate) }
 
-            var finishWatching by remember{ mutableStateOf(movie.finishDate)}
+            var finishWatching by remember { mutableStateOf(movie.finishDate) }
 
-            var someButtonClicked by remember{
+            var someButtonClicked by remember {
                 mutableStateOf(false)
             }
 
-            if(detailsType == "update") {
+            if (detailsType == "update") {
                 InputField(
                     valueState = noteState,
                     labelId = "Your notes",
                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
                     textStyle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 )
-            }
-            else{
+            } else {
                 Text(
                     text = "Note: " + noteState.value,
                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
@@ -174,7 +184,7 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                 )
             }
 
-            if(startWatching.isBlank()){
+            if (startWatching.isBlank()) {
                 if (detailsType == "update") {
                     Button(
                         shape = RoundedCornerShape(12.dp),
@@ -187,12 +197,11 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                         Text(text = "Start Watching", fontSize = 14.sp)
                     }
                 }
-            }
-            else{
+            } else {
                 Text(text = "Started Watching at: $startWatching", fontSize = 20.sp)
 
-                if(finishWatching.isBlank()){
-                    if(detailsType == "update") {
+                if (finishWatching.isBlank()) {
+                    if (detailsType == "update") {
                         Button(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.padding(vertical = 6.dp),
@@ -204,10 +213,9 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                             Text(text = "Finish Watching", fontSize = 14.sp)
                         }
                     }
-                }
-                else{
+                } else {
                     Text(text = "Finished Watching at: $finishWatching", fontSize = 20.sp)
-                    if(detailsType == "update") {
+                    if (detailsType == "update") {
                         Button(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.padding(vertical = 6.dp),
@@ -234,22 +242,24 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
             var favSeason by remember { mutableStateOf(1) }
             var favEpisode by remember { mutableStateOf(1) }
 
-            val favoriteEpisodes = remember{
+            val favoriteEpisodes = remember {
                 mutableStateOf(movie.favoriteEpisodes)
             }
 
-            if(movie.type == "tv") {
-                val episodeList = generateSequence(1) { it + 1 }.take(movie.seasons[season - 1].episode)
-                .toList()
-                .map {
-                    it.toString()
-                }
+            if (movie.type == "tv") {
+                val episodeList =
+                    generateSequence(1) { it + 1 }.take(movie.seasons[season - 1].episode)
+                        .toList()
+                        .map {
+                            it.toString()
+                        }
 
-                val favEpisodeList = generateSequence(1) { it + 1 }.take(movie.seasons[favSeason - 1].episode)
-                    .toList()
-                    .map {
-                        it.toString()
-                    }
+                val favEpisodeList =
+                    generateSequence(1) { it + 1 }.take(movie.seasons[favSeason - 1].episode)
+                        .toList()
+                        .map {
+                            it.toString()
+                        }
 
                 val showSeasonDialog = remember {
                     mutableStateOf(false)
@@ -317,19 +327,19 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                     ChooseDialog(setShowDialog = { showFavEpisodeDialog.value = it },
                         listOfStrings = favEpisodeList,
                         onItemClick = {
-                            if(detailsType == "update"){
-                            favEpisode = it.toInt()
-                            showFavEpisodeDialog.value = false
+                            if (detailsType == "update") {
+                                favEpisode = it.toInt()
+                                showFavEpisodeDialog.value = false
 
-                            favoriteEpisodes.value = favoriteEpisodes.value.plus((Episode(
-                                season = favSeason,
-                                episode = favEpisode
-                            )))
-                                }
+                                favoriteEpisodes.value = favoriteEpisodes.value.plus((Episode(
+                                    season = favSeason,
+                                    episode = favEpisode
+                                )))
+                            }
                         })
                 }
 
-                if(detailsType == "update") {
+                if (detailsType == "update") {
                     TextButton(onClick = {
                         showFavSeasonDialog.value = true
                         if (favSeason != 1 && favEpisode != 1) {
@@ -340,20 +350,19 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                     }
                 }
 
-                FavoriteEpisodes(favoriteEpisodes){
+                FavoriteEpisodes(favoriteEpisodes) {
                     favoriteEpisodes.value = favoriteEpisodes.value.minus(it)
                 }
             }
-            val resourceState = remember{
+            val resourceState = remember {
                 mutableStateOf(movie.resource)
             }
 
-            if (detailsType == "update"){
+            if (detailsType == "update") {
                 InputField(valueState = resourceState,
                     labelId = "Resource of your movie",
                     modifier = Modifier.fillMaxWidth(0.8f))
-            }
-            else if(movie.resource.isNotBlank()){
+            } else if (movie.resource.isNotBlank()) {
                 val uriHandler = LocalUriHandler.current
 
                 TextButton(onClick = { uriHandler.openUri(movie.resource) }) {
@@ -364,7 +373,7 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                 }
             }
 
-            if(detailsType == "update") {
+            if (detailsType == "update") {
 
                 Button(
                     shape = RoundedCornerShape(14.dp),
@@ -387,14 +396,13 @@ fun UpdateContent(navController: NavController, movie: MovierItem){
                                 ) as Map<String, Any>
                             )
                             .addOnSuccessListener {
-                                if(finishWatching.isBlank()) {
+                                if (finishWatching.isBlank()) {
                                     navController.navigate(MovierScreens.HomeScreen.name) {
                                         popUpTo(MovierScreens.UpdateScreen.name) {
                                             inclusive = true
                                         }
                                     }
-                                }
-                                else{
+                                } else {
                                     navController.navigate(MovierScreens.StatsScreen.name) {
                                         popUpTo(MovierScreens.UpdateScreen.name) {
                                             inclusive = true

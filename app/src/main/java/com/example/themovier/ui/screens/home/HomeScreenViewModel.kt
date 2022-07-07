@@ -29,7 +29,7 @@ class HomeScreenViewModel @Inject constructor(private val repository: FireRepo) 
         getUserMovies(userId)
     }
 
-    private fun getUserData(userId: String){
+    private fun getUserData(userId: String) {
         viewModelScope.launch {
             loadingUser.value = true
             repository.getUserInfo(userId).onSuccess {
@@ -39,7 +39,7 @@ class HomeScreenViewModel @Inject constructor(private val repository: FireRepo) 
         }
     }
 
-   fun getUserMovies(userId: String){
+    fun getUserMovies(userId: String) {
         viewModelScope.launch {
             loadingMovies.value = true
             repository.getUserMovies(userId).onSuccess {

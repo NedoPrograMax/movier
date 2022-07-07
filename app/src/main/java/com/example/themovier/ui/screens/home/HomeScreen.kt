@@ -9,7 +9,10 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.WorkHistory
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -34,7 +37,7 @@ fun HomeScreen(
     navController: NavController,
     selectImageLauncher: ActivityResultLauncher<Intent>,
     imageState: MutableState<Uri?>,
-    viewModel: HomeScreenViewModel = hiltViewModel()
+    viewModel: HomeScreenViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val scaffoldState = rememberScaffoldState()
@@ -100,7 +103,9 @@ fun HomeScreen(
             },
             drawerContent = {
                 DrawerHeader(
-                    imageUrl = if (imageState.value == null) userData.profileUrl else{ imageState.value.toString()},
+                    imageUrl = if (imageState.value == null) userData.profileUrl else {
+                        imageState.value.toString()
+                    },
                     userDocId = userData.id,
                     name = userData.name,
                     enabled = imageState.value != null
@@ -128,9 +133,9 @@ fun HomeScreen(
                     })
             },
             floatingActionButton = {
-                    FABContent {
-                        navController.navigate(MovierScreens.SearchScreen.name)
-                    }
+                FABContent {
+                    navController.navigate(MovierScreens.SearchScreen.name)
+                }
             }
             //   drawerGesturesEnabled = scaffoldState.drawerState.isOpen
         ) {
@@ -139,10 +144,9 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center
             ) {
-                if (viewModel.loadingMovies.value && viewModel.dataMovies.value.isNullOrEmpty()){
+                if (viewModel.loadingMovies.value && viewModel.dataMovies.value.isNullOrEmpty()) {
                     LinearProgressIndicator()
-                }
-                else {
+                } else {
                     HomeContent(navController = navController, viewModel)
                 }
             }
@@ -150,14 +154,14 @@ fun HomeScreen(
     }
 
 
-    if (viewModel.loadingUser.value){
+    if (viewModel.loadingUser.value) {
         CircularProgressIndicator()
     }
 }
 
 
 @Composable
-fun HomeContent(navController: NavController, viewModel: HomeScreenViewModel){
+fun HomeContent(navController: NavController, viewModel: HomeScreenViewModel) {
 
     val isAddingWatched = remember {
         mutableStateOf(false)
@@ -166,10 +170,10 @@ fun HomeContent(navController: NavController, viewModel: HomeScreenViewModel){
         mutableStateOf(false)
     }
 
-    val watchedMovieList = viewModel.dataMovies.value?.filter {movie->
+    val watchedMovieList = viewModel.dataMovies.value?.filter { movie ->
         movie.startDate.isNotBlank() && movie.finishDate.isBlank()
     }!!
-    val unwatchedMovieList = viewModel.dataMovies.value?.filter {movie->
+    val unwatchedMovieList = viewModel.dataMovies.value?.filter { movie ->
         movie.startDate.isBlank()
     }!!
     val displayMetrics = LocalContext.current.resources.displayMetrics
@@ -192,7 +196,7 @@ fun HomeContent(navController: NavController, viewModel: HomeScreenViewModel){
                 screenHeight = screenHeight,
                 navController = navController,
                 screenWidth = screenWidth
-                )
+            )
 
             AddingArea(isAddingUnWatched, viewModel, "Watch later")
 

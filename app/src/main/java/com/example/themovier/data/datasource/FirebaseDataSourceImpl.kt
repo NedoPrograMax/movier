@@ -6,7 +6,7 @@ import com.example.themovier.data.models.MovierUser
 import com.example.themovier.domain.datasource.FirebaseDataSource
 import com.google.firebase.firestore.FirebaseFirestore
 
-class FirebaseDataSourceImpl() : FirebaseDataSource{
+class FirebaseDataSourceImpl : FirebaseDataSource {
     private val firebaseFirestore = FirebaseFirestore.getInstance()
 
     override fun createUser(email: String, userId: String) {
@@ -18,13 +18,13 @@ class FirebaseDataSourceImpl() : FirebaseDataSource{
             profileUrl = "")
         firebaseFirestore.collection("users")
             .add(user)
-            .addOnSuccessListener { documentRef->
+            .addOnSuccessListener { documentRef ->
                 val documentId = documentRef.id
                 firebaseFirestore.collection("users")
                     .document(documentId)
                     .update(hashMapOf("id" to documentId) as Map<String, Any>)
-                    .addOnCompleteListener{task->
-                        if (task.isSuccessful){
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
                             Log.d("UpdatingUser", "Good")
                         }
                     }
@@ -47,16 +47,16 @@ class FirebaseDataSourceImpl() : FirebaseDataSource{
             }
     }
 
-    override fun createMovie(movie: MovierItem){
+    override fun createMovie(movie: MovierItem) {
         firebaseFirestore.collection("movies")
             .add(movie)
-            .addOnSuccessListener {   documentRef->
+            .addOnSuccessListener { documentRef ->
                 val documentId = documentRef.id
                 firebaseFirestore.collection("movies")
                     .document(documentId)
                     .update(hashMapOf("id" to documentId) as Map<String, Any>)
-                    .addOnCompleteListener{task->
-                        if (task.isSuccessful){
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
                             Log.d("UpdatingMovie", "Success")
                         }
                     }
@@ -69,7 +69,7 @@ class FirebaseDataSourceImpl() : FirebaseDataSource{
             }
     }
 
-    override fun deleteMovie(movieId: String){
+    override fun deleteMovie(movieId: String) {
         firebaseFirestore.collection("movies")
             .document(movieId)
             .delete()

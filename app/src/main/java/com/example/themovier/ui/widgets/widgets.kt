@@ -60,7 +60,7 @@ fun AddingArea(isAdding: MutableState<Boolean>, viewModel: HomeScreenViewModel, 
     ) { isInBound, movierItem ->
         val bgColor = if (!isAdding.value)
             Color.Transparent
-        else  if (isInBound) {
+        else if (isInBound) {
             Color.Red
         } else {
             Color.White
@@ -70,8 +70,9 @@ fun AddingArea(isAdding: MutableState<Boolean>, viewModel: HomeScreenViewModel, 
             val date = formatDate(Timestamp.now())
             if (isInBound) {
 
-                val hashMap = if(movierItem.startDate.isBlank()) hashMapOf<String, Any>("startDate" to date)
-                else hashMapOf<String, Any>("startDate" to "")
+                val hashMap =
+                    if (movierItem.startDate.isBlank()) hashMapOf<String, Any>("startDate" to date)
+                    else hashMapOf<String, Any>("startDate" to "")
                 FirebaseFirestore.getInstance().collection("movies")
                     .document(movierItem.id)
                     .update(hashMap)
@@ -82,9 +83,8 @@ fun AddingArea(isAdding: MutableState<Boolean>, viewModel: HomeScreenViewModel, 
                     .addOnFailureListener {
                         Log.e("CheckingSmth", it.message!!)
                     }
-             //   Toast.makeText(context, movierItem.title, Toast.LENGTH_SHORT).show()
+                //   Toast.makeText(context, movierItem.title, Toast.LENGTH_SHORT).show()
             }
-            // foodItems[movierItem.id] = movierItem
         }
 
         Column(
@@ -99,13 +99,13 @@ fun AddingArea(isAdding: MutableState<Boolean>, viewModel: HomeScreenViewModel, 
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-                Text(
-                    text = if(isAdding.value) "Add to the list" else title,
-                    fontSize = 18.sp,
-                    color = Color.Red,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
+            Text(
+                text = if (isAdding.value) "Add to the list" else title,
+                fontSize = 18.sp,
+                color = Color.Red,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
 
         }
     }
@@ -119,10 +119,10 @@ fun MovieItemCard(
     modifier: Modifier,
     screenHeight: Float,
     navController: NavController,
-    screenWidth: Float
+    screenWidth: Float,
 ) {
     val context = LocalContext.current
-    val image by remember(movieItem){
+    val image by remember(movieItem) {
         mutableStateOf("https://image.tmdb.org/t/p/w500" + movieItem.posterUrl)
     }
     if (isAdding != null) {
@@ -153,8 +153,7 @@ fun MovieItemCard(
                 contentDescription = "Movie Image"
             )
         }
-    }
-    else{
+    } else {
         AsyncImage(
             model = ImageRequest.Builder(context)
                 .data(image)
@@ -183,10 +182,10 @@ fun MovieItemsRow(
     cardModifier: Modifier = Modifier,
     isAdding: MutableState<Boolean>? = null,
     screenHeight: Float,
-    navController : NavController,
-    screenWidth: Float
+    navController: NavController,
+    screenWidth: Float,
 ) {
-    LazyRow() {
+    LazyRow {
         items(movieList) { item ->
             MovieItemCard(
                 movieItem = item,
@@ -208,15 +207,15 @@ fun InputField(
     enabled: Boolean = true,
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Next,
-    textStyle : TextStyle = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onBackground),
+    textStyle: TextStyle = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onBackground),
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    trailingIcon : @Composable (() -> Unit)? = {},
-    onAction : KeyboardActions = KeyboardActions.Default
-){
+    trailingIcon: @Composable (() -> Unit)? = {},
+    onAction: KeyboardActions = KeyboardActions.Default,
+) {
     OutlinedTextField(
         value = valueState.value,
-        onValueChange = {valueState.value = it},
-    label = { Text(text = labelId)},
+        onValueChange = { valueState.value = it },
+        label = { Text(text = labelId) },
         singleLine = isSingleLine,
         textStyle = textStyle,
         modifier = modifier
@@ -237,8 +236,8 @@ fun EmailInput(
     labelId: String = "Email",
     enabled: Boolean = true,
     imeAction: ImeAction = ImeAction.Next,
-    onAction: KeyboardActions = KeyboardActions.Default
-){
+    onAction: KeyboardActions = KeyboardActions.Default,
+) {
     InputField(
         modifier = modifier,
         valueState = emailState,
@@ -260,7 +259,7 @@ fun PasswordInput(
     passwordVisibility: MutableState<Boolean>,
     onAction: KeyboardActions = KeyboardActions.Default,
 ) {
-    val visualTransformation = if(passwordVisibility.value) VisualTransformation.None
+    val visualTransformation = if (passwordVisibility.value) VisualTransformation.None
     else PasswordVisualTransformation()
     InputField(
         valueState = passwordState,
@@ -272,7 +271,7 @@ fun PasswordInput(
         imeAction = imeAction,
         onAction = onAction,
         visualTransformation = visualTransformation,
-        trailingIcon = {PasswordVisibility(passwordVisibility = passwordVisibility)}
+        trailingIcon = { PasswordVisibility(passwordVisibility = passwordVisibility) }
     )
 }
 
@@ -280,11 +279,13 @@ fun PasswordInput(
 fun PasswordVisibility(passwordVisibility: MutableState<Boolean>) {
     val visible = passwordVisibility.value
     IconButton(onClick = { passwordVisibility.value = !visible }) {
-        Icon(imageVector = Icons.Default.Password, contentDescription = "Password Icon", tint = Color.LightGray)
+        Icon(imageVector = Icons.Default.Password,
+            contentDescription = "Password Icon",
+            tint = Color.LightGray)
     }
 }
 
-fun showToast(context: Context, message: String, toastLength: Int = Toast.LENGTH_LONG ){
+fun showToast(context: Context, message: String, toastLength: Int = Toast.LENGTH_LONG) {
     Toast.makeText(context, message, toastLength).show()
 }
 
@@ -294,25 +295,23 @@ fun FABContent(onTap: () -> Unit) {
         onClick = { onTap() },
         shape = RoundedCornerShape(50.dp),
         backgroundColor = MaterialTheme.colors.background) {
-        Icon(imageVector = Icons.Default.Add, contentDescription = "Add Icon", tint = MaterialTheme.colors.onBackground)
+        Icon(imageVector = Icons.Default.Add,
+            contentDescription = "Add Icon",
+            tint = MaterialTheme.colors.onBackground)
     }
 }
 
 @Composable
-fun FavoriteEpisodes(favoriteEpisodes: MutableState<List<Episode>>, onLongPress: (Episode) -> Unit) {
-    LazyRow(){
-        items(favoriteEpisodes.value){ episode->
+fun FavoriteEpisodes(
+    favoriteEpisodes: MutableState<List<Episode>>,
+    onLongPress: (Episode) -> Unit,
+) {
+    LazyRow {
+        items(favoriteEpisodes.value) { episode ->
             Card(
                 modifier = Modifier
                     .padding(2.dp)
-                    /* .pointerInput(Unit){
-                                       detectTapGestures(onLongPress = {
-                                           Log.d("TestUpdate", episode.toString())
-                                          onLongPress(episode)
-                                       })
-                    }*/
-                    .clickable { onLongPress(episode) }
-                ,
+                    .clickable { onLongPress(episode) },
 
                 shape = RoundedCornerShape(20.dp)) {
                 Text(
@@ -322,5 +321,53 @@ fun FavoriteEpisodes(favoriteEpisodes: MutableState<List<Episode>>, onLongPress:
                 )
             }
         }
+    }
+}
+
+@Composable
+fun MovierItem.MovieDescription() {
+
+    Column(
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text(
+            text = description,
+            modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
+            style = MaterialTheme.typography.h6,
+            fontWeight = FontWeight.Light,
+        )
+
+        val genress = genres.map {
+            it.name
+        }.toString()
+
+
+        Text(
+            text = "Genres: $genress",
+            modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
+            style = MaterialTheme.typography.h6,
+            fontWeight = FontWeight.Light
+        )
+
+        Text(
+            text = "Status: $status",
+            modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
+            style = MaterialTheme.typography.h6,
+            fontWeight = FontWeight.Light
+        )
+
+        Text(
+            text = "Language: $language",
+            modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
+            style = MaterialTheme.typography.h6,
+            fontWeight = FontWeight.Light
+        )
+
+        Text(
+            text = "Release Date: $releaseDate",
+            modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
+            style = MaterialTheme.typography.h6,
+            fontWeight = FontWeight.Light
+        )
     }
 }

@@ -12,11 +12,11 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun MovierAppBar(
-    title : String,
+    title: String,
     icon: ImageVector? = null,
     onIconClick: () -> Unit = {},
-    actions: @Composable () -> Unit = {}
-){
+    actions: @Composable () -> Unit = {},
+) {
     TopAppBar(
         title = {
             Row(
