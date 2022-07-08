@@ -1,6 +1,5 @@
 package com.example.themovier.ui.screens.details
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,7 +19,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.themovier.data.models.MovierItem
+import com.example.themovier.domain.models.MovierItemModel
 import com.example.themovier.ui.widgets.MovieDescription
 import com.example.themovier.ui.widgets.MovierAppBar
 import com.example.themovier.ui.widgets.showToast
@@ -53,15 +52,14 @@ fun DetailsScreen(
                     IconButton(onClick = {
                         if (!isFavoriteIcon) {
                             viewModel.data?.apply {
-                                val movie: MovierItem = MovierItem(
-                                    title = title,
-                                    idDb = idDb,
+                                val movie = MovierItemModel(
+                                    idDb = movieId?.toInt()!!,
                                     type = movieType,
                                     posterUrl = posterUrl,
                                     userId = FirebaseAuth.getInstance().currentUser!!.uid
                                 )
                                 viewModel.createMovie(movie)
-                                showToast(context, "$title was added to your list")
+                                showToast(context, "Movie was added to your list")
                             }
                         } else {
                             if (movierId.isNotBlank()) viewModel.deleteMovie(movierId)
@@ -78,18 +76,18 @@ fun DetailsScreen(
             )
         }
 
-    ) {
-        it
+    ) { padding ->
+        padding
         viewModel.searchMovie(movieId!!, movieType)
         if (viewModel.isLoading) {
             LinearProgressIndicator()
 
         } else {
             FirebaseFirestore.getInstance().collection("movies")
-                .whereEqualTo("idDb", viewModel.data!!.id)
+                .whereEqualTo("idDb", movieId)
                 .get()
                 .addOnSuccessListener { document ->
-                    val movieList = document.toObjects(MovierItem::class.java)
+                    val movieList = document.toObjects(MovierItemModel::class.java)
                     if (movieList.any {
                             movierId = it.id
                             it.userId == FirebaseAuth.getInstance().currentUser!!.uid
@@ -113,7 +111,7 @@ fun DetailsContent(viewModel: DetailsViewModel) {
             viewModel.data?.apply {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
-                        .data("https://image.tmdb.org/t/p/w500" + posterUrl)
+                        .data("https://image.tmdb.org/t/p/w500$posterUrl")
                         .crossfade(true)
                         .build(),
                     contentScale = ContentScale.Fit,

@@ -137,7 +137,6 @@ fun HomeScreen(
                     navController.navigate(MovierScreens.SearchScreen.name)
                 }
             }
-            //   drawerGesturesEnabled = scaffoldState.drawerState.isOpen
         ) {
             it
             Column(
@@ -161,7 +160,10 @@ fun HomeScreen(
 
 
 @Composable
-fun HomeContent(navController: NavController, viewModel: HomeScreenViewModel) {
+fun HomeContent(
+    navController: NavController,
+    viewModel: HomeScreenViewModel,
+) {
 
     val isAddingWatched = remember {
         mutableStateOf(false)
@@ -184,7 +186,7 @@ fun HomeContent(navController: NavController, viewModel: HomeScreenViewModel) {
         .height((screenHeight * 0.3).dp)
 
     LongPressDraggable(modifier = Modifier.fillMaxSize()) {
-        Column() {
+        Column {
             AddingArea(isAddingWatched, viewModel, "Watching now")
 
             Log.d("WathedListM", watchedMovieList.toString())

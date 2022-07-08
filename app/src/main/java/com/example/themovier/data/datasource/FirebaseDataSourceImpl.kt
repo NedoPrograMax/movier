@@ -1,9 +1,9 @@
 package com.example.themovier.data.datasource
 
 import android.util.Log
-import com.example.themovier.data.models.MovierItem
-import com.example.themovier.data.models.MovierUser
+import com.example.themovier.data.models.MovierUserModel
 import com.example.themovier.domain.datasource.FirebaseDataSource
+import com.example.themovier.domain.models.MovierItemModel
 import com.google.firebase.firestore.FirebaseFirestore
 
 class FirebaseDataSourceImpl : FirebaseDataSource {
@@ -11,7 +11,7 @@ class FirebaseDataSourceImpl : FirebaseDataSource {
 
     override fun createUser(email: String, userId: String) {
         val name = email.split("@")[0]
-        val user = MovierUser(
+        val user = MovierUserModel(
             userId = userId,
             name = name,
             email = email,
@@ -47,7 +47,8 @@ class FirebaseDataSourceImpl : FirebaseDataSource {
             }
     }
 
-    override fun createMovie(movie: MovierItem) {
+
+    override fun createMovie(movie: MovierItemModel) {
         firebaseFirestore.collection("movies")
             .add(movie)
             .addOnSuccessListener { documentRef ->

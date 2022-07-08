@@ -27,7 +27,8 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.themovier.data.datasource.FirebaseDataSourceImpl
 import com.example.themovier.data.models.Episode
-import com.example.themovier.data.models.MovierItem
+import com.example.themovier.data.models.UpdateModel
+import com.example.themovier.data.models.toDetails
 import com.example.themovier.data.utils.formatDate
 import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.screens.details.DetailsViewModel
@@ -43,12 +44,12 @@ fun UpdateScreen(
     detailsViewModel: DetailsViewModel = hiltViewModel(),
 ) {
     var movie by remember {
-        mutableStateOf<MovierItem?>(MovierItem())
+        mutableStateOf<UpdateModel?>(UpdateModel())
     }
     val firebaseDataSource = FirebaseDataSourceImpl()
 
     viewModel.getMovie(movieId!!)
-    if (viewModel.data.value == null || viewModel.data.value?.title?.isBlank()!!) {
+    if (viewModel.data.value == null || viewModel.data.value?.type?.isBlank()!!) {
         LinearProgressIndicator()
     } else {
         movie = viewModel.data.value
@@ -63,6 +64,7 @@ fun UpdateScreen(
                 movie!!.genres = genres
                 movie!!.seasons = seasons
                 movie!!.releaseDate = releaseDate
+                movie!!.posterUrl = posterUrl
             }
             Scaffold(
                 topBar = {
@@ -93,7 +95,7 @@ fun UpdateScreen(
 }
 
 @Composable
-fun UpdateContent(navController: NavController, movie: MovierItem) {
+fun UpdateContent(navController: NavController, movie: UpdateModel) {
     val context = LocalContext.current
     var detailsType by remember {
         mutableStateOf("details")
@@ -148,7 +150,7 @@ fun UpdateContent(navController: NavController, movie: MovierItem) {
 
 
             if (detailsType == "details") {
-                movie.MovieDescription()
+                movie.toDetails().MovieDescription()
             }
 
 
@@ -280,7 +282,7 @@ fun UpdateContent(navController: NavController, movie: MovierItem) {
 
                 Text(text = "You stopped at ")
 
-                Row() {
+                Row {
                     if (showSeasonDialog.value) {
                         ChooseDialog(setShowDialog = { showSeasonDialog.value = it },
                             listOfStrings = seasonList,
@@ -294,7 +296,7 @@ fun UpdateContent(navController: NavController, movie: MovierItem) {
                         onClick = { showSeasonDialog.value = true },
                         enabled = detailsType == "update"
                     ) {
-                        Text(text = "Season: " + season)
+                        Text(text = "Season: $season")
                     }
 
                     if (showEpisodeDialog.value) {
@@ -309,7 +311,7 @@ fun UpdateContent(navController: NavController, movie: MovierItem) {
                     TextButton(
                         onClick = { showEpisodeDialog.value = true },
                         enabled = detailsType == "update") {
-                        Text(text = "Episode: " + episode)
+                        Text(text = "Episode: $episode")
                     }
                 }
 

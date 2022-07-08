@@ -35,13 +35,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.themovier.data.models.DetailsUIModel
 import com.example.themovier.data.models.Episode
-import com.example.themovier.data.models.MovierItem
-import com.example.themovier.ui.navigation.MovierScreens
-import com.example.themovier.ui.screens.home.HomeScreenViewModel
+import com.example.themovier.data.models.HomeUIModel
 import com.example.themovier.data.utils.DragTarget
 import com.example.themovier.data.utils.DropTarget
 import com.example.themovier.data.utils.formatDate
+import com.example.themovier.ui.navigation.MovierScreens
+import com.example.themovier.ui.screens.home.HomeScreenViewModel
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -52,12 +53,12 @@ fun AddingArea(isAdding: MutableState<Boolean>, viewModel: HomeScreenViewModel, 
 
     val context = LocalContext.current
 
-    DropTarget<MovierItem>(
+    DropTarget<HomeUIModel>(
         modifier = Modifier
             .padding(6.dp)
             .fillMaxWidth()
             .height(30.dp)
-    ) { isInBound, movierItem ->
+    ) { isInBound, homeItem ->
         val bgColor = if (!isAdding.value)
             Color.Transparent
         else if (isInBound) {
@@ -66,24 +67,22 @@ fun AddingArea(isAdding: MutableState<Boolean>, viewModel: HomeScreenViewModel, 
             Color.White
         }
 
-        movierItem?.let {
+        homeItem?.let {
             val date = formatDate(Timestamp.now())
             if (isInBound) {
 
                 val hashMap =
-                    if (movierItem.startDate.isBlank()) hashMapOf<String, Any>("startDate" to date)
+                    if (homeItem.startDate.isBlank()) hashMapOf<String, Any>("startDate" to date)
                     else hashMapOf<String, Any>("startDate" to "")
                 FirebaseFirestore.getInstance().collection("movies")
-                    .document(movierItem.id)
+                    .document(homeItem.id)
                     .update(hashMap)
                     .addOnSuccessListener {
-                        Log.d("CheckingSmth", hashMap.toString() + movierItem.title)
                         viewModel.getUserMovies(FirebaseAuth.getInstance().currentUser!!.uid)
                     }
                     .addOnFailureListener {
                         Log.e("CheckingSmth", it.message!!)
                     }
-                //   Toast.makeText(context, movierItem.title, Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -114,7 +113,7 @@ fun AddingArea(isAdding: MutableState<Boolean>, viewModel: HomeScreenViewModel, 
 
 @Composable
 fun MovieItemCard(
-    movieItem: MovierItem,
+    movieItem: HomeUIModel,
     isAdding: MutableState<Boolean>? = null,
     modifier: Modifier,
     screenHeight: Float,
@@ -178,7 +177,7 @@ fun MovieItemCard(
 
 @Composable
 fun MovieItemsRow(
-    movieList: List<MovierItem>,
+    movieList: List<HomeUIModel>,
     cardModifier: Modifier = Modifier,
     isAdding: MutableState<Boolean>? = null,
     screenHeight: Float,
@@ -325,7 +324,7 @@ fun FavoriteEpisodes(
 }
 
 @Composable
-fun MovierItem.MovieDescription() {
+fun DetailsUIModel.MovieDescription() {
 
     Column(
         horizontalAlignment = Alignment.Start
