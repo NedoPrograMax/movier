@@ -15,24 +15,10 @@ class FirebaseDataSourceImpl : FirebaseDataSource {
             userId = userId,
             name = name,
             email = email,
-            profileUrl = "")
-        firebaseFirestore.collection("users")
-            .add(user)
-            .addOnSuccessListener { documentRef ->
-                val documentId = documentRef.id
-                firebaseFirestore.collection("users")
-                    .document(documentId)
-                    .update(hashMapOf("id" to documentId) as Map<String, Any>)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            Log.d("UpdatingUser", "Good")
-                        }
-                    }
-                    .addOnFailureListener {
-                        Log.e("UpdatingUser", it.message!!)
-                    }
-            }
+            userPicture = "",
+        )
 
+        firebaseFirestore.collection("users").add(user)
     }
 
     override fun updateUserProfileData(userHashMap: Map<String, Any>, documentId: String) {

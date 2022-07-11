@@ -103,7 +103,7 @@ fun HomeScreen(
             },
             drawerContent = {
                 DrawerHeader(
-                    imageUrl = if (imageState.value == null) userData.profileUrl else {
+                    imageUrl = if (imageState.value == null) userData.userPicture else {
                         imageState.value.toString()
                     },
                     userDocId = userData.id,
