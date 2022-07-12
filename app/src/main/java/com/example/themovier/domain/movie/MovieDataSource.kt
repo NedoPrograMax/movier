@@ -1,10 +1,11 @@
-package com.example.themovier.domain.repositories
+package com.example.themovier.domain.movie
 
-import com.example.themovier.data.models.MovierUserModel
 import com.example.themovier.domain.models.MovierItemModel
 
-interface FireRepo {
-    suspend fun getUserInfo(userId: String): com.github.michaelbull.result.Result<MovierUserModel, Throwable>
+interface MovieDataSource {
     suspend fun getUserMovies(userId: String): com.github.michaelbull.result.Result<List<MovierItemModel>, Throwable>
     suspend fun getMovie(movieId: String): com.github.michaelbull.result.Result<MovierItemModel, Throwable>
+
+    suspend fun createMovie(movie: MovierItemModel)
+    suspend fun deleteMovie(movieId: String)
 }

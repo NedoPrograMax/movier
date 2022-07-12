@@ -20,19 +20,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.themovier.R
-import com.example.themovier.data.datasource.FirebaseDataSourceImpl
+import com.example.themovier.ui.models.HomeScreenMenuItem
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.withContext
 import java.util.*
 
 @Composable
 fun DrawerHeader(
     imageUrl: String,
-    userDocId: String,
     enabled: Boolean,
     name: String,
+    onUpdate: () -> Unit,
+    viewModel: HomeScreenViewModel,
     onImageClick: () -> Unit,
 ) {
     var imageUrlMy = imageUrl
@@ -42,7 +45,6 @@ fun DrawerHeader(
     var imageLoading by remember(enabled) {
         mutableStateOf(enabled)
     }
-    val firebaseDataSource = FirebaseDataSourceImpl()
 
 
     val context = LocalContext.current
@@ -71,7 +73,6 @@ fun DrawerHeader(
                 },
             contentDescription = "Profile Icon")
 
-        //   Text(text = "Name", fontSize = 24.sp)
         TextField(
             value = nameState.value,
             onValueChange = { nameState.value = it },
@@ -98,12 +99,12 @@ fun DrawerHeader(
                         if (taskSnapshot.task.isSuccessful) {
                             taskSnapshot.task.snapshot.metadata!!.reference!!.downloadUrl.addOnSuccessListener { result ->
                                 imageUrlMy = result.toString()
-                                firebaseDataSource.updateUserProfileData(
+                                viewModel.updateUserProfileData(
                                     hashMapOf(
                                         "profileUrl" to imageUrlMy,
                                         "name" to nameState.value,
                                     ) as Map<String, Any>,
-                                    userDocId
+                                    onSuccess = onUpdate,
                                 )
                                 Log.i("ImageTesti", imageUrlMy)
                             }
@@ -120,11 +121,11 @@ fun DrawerHeader(
                         if (taskSnapshot.task.isSuccessful) {
                             taskSnapshot.task.snapshot.metadata!!.reference!!.downloadUrl.addOnSuccessListener { result ->
                                 imageUrlMy = result.toString()
-                                firebaseDataSource.updateUserProfileData(
+                                viewModel.updateUserProfileData(
                                     hashMapOf(
                                         "profileUrl" to imageUrlMy
                                     ) as Map<String, Any>,
-                                    userDocId
+                                    onSuccess = onUpdate,
                                 )
                                 Log.i("ImageTesti", imageUrlMy)
                             }
@@ -135,11 +136,11 @@ fun DrawerHeader(
                             Log.e("ImageTest", it.message!!)
                         }
                 } else if (nameState.value != name) {
-                    firebaseDataSource.updateUserProfileData(
+                    viewModel.updateUserProfileData(
                         hashMapOf(
-                            "name" to imageUrlMy
+                            "name" to nameState.value
                         ) as Map<String, Any>,
-                        userDocId
+                        onSuccess = onUpdate,
                     )
                 }
             }
@@ -151,10 +152,10 @@ fun DrawerHeader(
 
 @Composable
 fun DrawerBody(
-    items: List<MenuItem>,
+    items: List<HomeScreenMenuItem>,
     modifier: Modifier = Modifier,
     itemTextStyle: TextStyle = TextStyle(fontSize = 18.sp),
-    onItemClick: (MenuItem) -> Unit,
+    onItemClick: (HomeScreenMenuItem) -> Unit,
 ) {
     LazyColumn(modifier) {
         items(items) { item ->

@@ -1,4 +1,4 @@
-package com.example.themovier.data.utils
+package com.example.themovier.ui.widgets
 
 import android.util.Log
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress

@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.widgets.EmailInput
@@ -34,7 +35,7 @@ import com.example.themovier.ui.widgets.PasswordInput
 @Composable
 fun LoginScreen(
     navController: NavController,
-    viewModel: LoginScreenViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    viewModel: LoginScreenViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val showLoginForm = rememberSaveable {

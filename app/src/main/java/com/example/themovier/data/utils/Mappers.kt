@@ -1,8 +1,8 @@
 package com.example.themovier.data.utils
 
-import com.example.themovier.data.models.DetailsUIModel
+import com.example.themovier.ui.models.DetailsUIModel
 import com.example.themovier.data.models.Episode
-import com.example.themovier.data.models.UpdateModel
+import com.example.themovier.ui.models.UpdateModel
 import com.example.themovier.domain.models.MovieDetails
 import com.example.themovier.domain.models.MovierItemModel
 import com.example.themovier.domain.models.TvDetails

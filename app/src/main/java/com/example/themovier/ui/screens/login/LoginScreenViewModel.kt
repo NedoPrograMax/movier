@@ -2,16 +2,20 @@ package com.example.themovier.ui.screens.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.themovier.data.datasource.FirebaseDataSourceImpl
+import com.example.themovier.domain.user.UserDataSource
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class LoginScreenViewModel : ViewModel() {
+@HiltViewModel
+class LoginScreenViewModel @Inject constructor(private val userDataSource: UserDataSource) :
+    ViewModel() {
     private val auth: FirebaseAuth = Firebase.auth
-    private val firebaseDataSource = FirebaseDataSourceImpl()
 
     fun createUserWithEmailAndPassword(
         email: String,
@@ -19,19 +23,18 @@ class LoginScreenViewModel : ViewModel() {
         onFailure: (String) -> Unit = {},
         home: () -> Unit,
     ) = viewModelScope.launch {
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    firebaseDataSource.createUser(email = task.result.user?.email!!,
-                        userId = auth.currentUser?.uid!!)
-                    home()
-                } else {
-                    task.exception?.message?.let { onFailure(it) }
-                }
-            }
-            .addOnFailureListener {
-                it.message?.let { it1 -> onFailure(it1) }
-            }
+        val userId = async {
+            userDataSource.createUserWithEmailAndPassword(
+                email = email,
+                password = password,
+                onFailure = onFailure,
+                onSuccess = { userId ->
+                    userDataSource.createUserItem(email, userId)
+                },
+                home = home,
+            )
+        }
+
     }
 
     fun signInWithEmailAndPassword(
@@ -40,21 +43,12 @@ class LoginScreenViewModel : ViewModel() {
         onFailure: (String) -> Unit = {},
         home: () -> Unit,
     ) = viewModelScope.launch {
-        try {
-            auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        home()
-                    } else {
-                        task.exception?.message?.let { onFailure(it) }
-                    }
-                }
-                .addOnFailureListener {
-                    it.message?.let { it1 -> onFailure(it1) }
-                }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        userDataSource.signInWithEmailAndPassword(
+            email = email,
+            password = password,
+            onFailure = onFailure,
+            home = home
+        )
     }
 
 }
