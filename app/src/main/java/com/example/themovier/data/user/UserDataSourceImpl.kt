@@ -74,25 +74,14 @@ class UserDataSourceImpl @Inject constructor() : UserDataSource {
     override suspend fun createUserWithEmailAndPassword(
         email: String,
         password: String,
-        onFailure: (String) -> Unit,
-        onSuccess: (String) -> Unit,
         home: () -> Unit,
     ): Unit = withContext(Dispatchers.IO) {
         try {
-            auth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        onSuccess(auth.currentUser!!.uid)
-                        home()
-                    } else {
-                        task.exception?.message?.let { onFailure(it) }
-                    }
-                }
-                .addOnFailureListener {
-                    it.message?.let { it1 -> onFailure(it1) }
-                }
+            val task = auth.createUserWithEmailAndPassword(email, password).await()
+            task.user?.uid?.let { Ok(it) } ?: Err(Exception("user id is not provided"))
         } catch (e: Exception) {
             e.printStackTrace()
+            Err(e)
         }
     }
 

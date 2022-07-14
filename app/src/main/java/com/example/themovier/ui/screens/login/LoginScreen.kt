@@ -1,6 +1,7 @@
 package com.example.themovier.ui.screens.login
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,9 +13,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -22,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,7 +37,18 @@ fun LoginScreen(
     navController: NavController,
     viewModel: LoginScreenViewModel = hiltViewModel(),
 ) {
+
+    val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
+    LaunchedEffect(key1 = Unit) {
+        viewModel.userCreationError.observe(lifecycleOwner) {
+            Toast.makeText(context, it.message, Toast.LENGTH_LONG).show()
+        }
+
+    }
+
+    val loading by viewModel.loading.collectAsState()
+
     val showLoginForm = rememberSaveable {
         mutableStateOf(true)
     }
