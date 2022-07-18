@@ -1,11 +1,16 @@
 package com.example.themovier.data.utils
 
 import android.icu.text.DateFormat
+import android.net.Uri
+import androidx.core.net.toUri
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.shouldShowRationale
 import com.google.firebase.Timestamp
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.tasks.await
+import java.util.*
 
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -19,3 +24,4 @@ fun formatDate(timestamp: Timestamp): String {
         .format(timestamp.toDate())
         .toString().split(",")[0]
 }
+

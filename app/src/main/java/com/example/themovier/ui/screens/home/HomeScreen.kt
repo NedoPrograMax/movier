@@ -114,14 +114,12 @@ fun HomeScreen(
                     viewModel = viewModel,
                     enabled = imageState.value != null,
                     onUpdate = {
-                        //    viewModel.getUserData()
+                        imageState.value = null
                         navController.navigate(MovierScreens.HomeScreen.name) {
                             popUpTo(MovierScreens.HomeScreen.name) {
                                 inclusive = true
                             }
                         }
-
-
                     },
                 ) {
                     permissionState.launchMultiplePermissionRequest()
@@ -168,7 +166,7 @@ fun HomeScreen(
 
 
     if (viewModel.loadingUser.value) {
-        CircularProgressIndicator()
+        LinearProgressIndicator()
     }
 }
 

@@ -1,5 +1,6 @@
 package com.example.themovier.ui.screens.home
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,14 +21,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.themovier.R
 import com.example.themovier.ui.models.HomeScreenMenuItem
-import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.withContext
-import java.util.*
+import com.example.themovier.ui.widgets.LoadingDialog
+import com.example.themovier.ui.widgets.showToast
+import com.github.michaelbull.result.Result
+import com.github.michaelbull.result.onSuccess
+
 
 @Composable
 fun DrawerHeader(
@@ -44,6 +46,9 @@ fun DrawerHeader(
     }
     var imageLoading by remember(enabled) {
         mutableStateOf(enabled)
+    }
+    var loadingCircle by remember {
+        mutableStateOf(false)
     }
 
 
@@ -88,60 +93,83 @@ fun DrawerHeader(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        var userUpdatingState by remember {
+            mutableStateOf<Result<Uri, Exception>?>(null)
+        }
+
+        var exceptionUpdatingState by remember {
+            mutableStateOf<Exception?>(null)
+        }
+
+        LaunchedEffect(Unit) {
+            viewModel.uriUpdateSharedFlow
+                .collect { result ->
+                    userUpdatingState = result
+                }
+        }
+
+        LaunchedEffect(Unit) {
+            viewModel.exceptionUpdateSharedFlow
+                .collect { result ->
+                    exceptionUpdatingState = result
+                }
+        }
+
+        if (loadingCircle) {
+            LoadingDialog()
+            if (enabled && nameState.value != name) {
+                userUpdatingState?.onSuccess { uri ->
+                    viewModel.updateUserProfileData(
+                        hashMapOf(
+                            "profileUrl" to uri.toString(),
+                            "name" to nameState.value,
+                        ) as Map<String, Any>,
+                    )
+                    //  loadingCircle = false
+                    //    onUpdate()
+                }
+
+            } else if (enabled) {
+                userUpdatingState?.onSuccess { uri ->
+                    viewModel.updateUserProfileData(
+                        hashMapOf(
+                            "profileUrl" to uri.toString(),
+                        ) as Map<String, Any>,
+                    )
+                    //    loadingCircle = false
+                    // onUpdate()
+                }
+            } else if (nameState.value != name) {
+                viewModel.updateUserProfileData(
+                    hashMapOf(
+                        "name" to nameState.value
+                    ) as Map<String, Any>,
+                )
+                //   loadingCircle = false
+                // onUpdate()
+            }
+            exceptionUpdatingState?.let {
+                if (it.message.isNullOrBlank()) {
+                    onUpdate()
+                    loadingCircle = false
+                } else {
+                    showToast(context, it.message!!)
+                    loadingCircle = false
+                }
+            }
+        }
+
         Button(
             modifier = Modifier.fillMaxWidth(0.6f),
             enabled = (imageUrlMy.isNotBlank() && enabled) || (nameState.value != name),
             onClick = {
+                loadingCircle = true
                 if (enabled && nameState.value != name) {
-                    val storageReference = FirebaseStorage.getInstance().reference
-                    val ref = storageReference.child("myImages/" + UUID.randomUUID().toString())
-                    ref.putFile(imageUrlMy.toUri()).addOnSuccessListener { taskSnapshot ->
-                        if (taskSnapshot.task.isSuccessful) {
-                            taskSnapshot.task.snapshot.metadata!!.reference!!.downloadUrl.addOnSuccessListener { result ->
-                                imageUrlMy = result.toString()
-                                viewModel.updateUserProfileData(
-                                    hashMapOf(
-                                        "profileUrl" to imageUrlMy,
-                                        "name" to nameState.value,
-                                    ) as Map<String, Any>,
-                                    onSuccess = onUpdate,
-                                )
-                                Log.i("ImageTesti", imageUrlMy)
-                            }
+                    imageUrlMy = viewModel.putImage(imageUrlMy.toUri()).toString()
 
-                        }
-                    }
-                        .addOnFailureListener {
-                            Log.e("ImageTest", it.message!!)
-                        }
+
                 } else if (enabled) {
-                    val storageReference = FirebaseStorage.getInstance().reference
-                    val ref = storageReference.child("myImages/" + UUID.randomUUID().toString())
-                    ref.putFile(imageUrlMy.toUri()).addOnSuccessListener { taskSnapshot ->
-                        if (taskSnapshot.task.isSuccessful) {
-                            taskSnapshot.task.snapshot.metadata!!.reference!!.downloadUrl.addOnSuccessListener { result ->
-                                imageUrlMy = result.toString()
-                                viewModel.updateUserProfileData(
-                                    hashMapOf(
-                                        "profileUrl" to imageUrlMy
-                                    ) as Map<String, Any>,
-                                    onSuccess = onUpdate,
-                                )
-                                Log.i("ImageTesti", imageUrlMy)
-                            }
-
-                        }
-                    }
-                        .addOnFailureListener {
-                            Log.e("ImageTest", it.message!!)
-                        }
-                } else if (nameState.value != name) {
-                    viewModel.updateUserProfileData(
-                        hashMapOf(
-                            "name" to nameState.value
-                        ) as Map<String, Any>,
-                        onSuccess = onUpdate,
-                    )
+                    imageUrlMy = viewModel.putImage(imageUrlMy.toUri()).toString()
                 }
             }
         ) {
