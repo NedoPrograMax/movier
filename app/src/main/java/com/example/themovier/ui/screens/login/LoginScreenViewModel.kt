@@ -15,6 +15,8 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginScreenViewModel @Inject constructor(private val userDataSource: UserDataSource) :
     ViewModel() {
+    private val loading
+
     private val _exceptionSignUpSharedFlow = MutableSharedFlow<Exception>()
     val exceptionSignUpSharedFlow = _exceptionSignUpSharedFlow.asSharedFlow()
 

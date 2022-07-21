@@ -3,13 +3,12 @@ package com.example.themovier.ui.screens.home
 import android.net.Uri
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.themovier.ui.models.HomeUIModel
 import com.example.themovier.domain.models.MovierUserModel
 import com.example.themovier.domain.movie.MovieDataSource
 import com.example.themovier.domain.user.UserDataSource
+import com.example.themovier.ui.models.HomeUIModel
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
@@ -32,14 +31,15 @@ class HomeScreenViewModel @Inject constructor(
     private val movieDataSource: MovieDataSource,
 ) : ViewModel() {
 
-    private val currentUserId = FirebaseAuth.getInstance().currentUser!!.uid
+    private val currentUserId =
+        FirebaseAuth.getInstance().currentUser?.uid ?: error("User isn't created")
 
     var loadingUser = mutableStateOf(false)
     val dataUser: MutableState<MovierUserModel?> =
         mutableStateOf(null)
 
     var loadingMovies = mutableStateOf(false)
-    val dataMovies: MutableState<List<HomeUIModel>?> =
+    val dataMovies: MutableState<List<HomeUIModel>> =
         mutableStateOf(listOf())
 
     private val _uriUpdateSharedFlow = MutableSharedFlow<Result<Uri, Exception>>()
@@ -81,24 +81,26 @@ class HomeScreenViewModel @Inject constructor(
     fun updateUserProfileData(
         map: Map<String, Any>,
         userId: String = currentUserId,
-    ) =
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = async { userDataSource.updateUserProfileData(map, userId) }
-            _exceptionUpdateSharedFlow.emit(result.await())
-        }
+    ) = viewModelScope.launch(Dispatchers.IO) {
+        val result = userDataSource.updateUserProfileData(map, userId)
+        _exceptionUpdateSharedFlow.emit(result)
+    }
 
     fun putImage(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
+            // extract to image data source
             val storageReference = FirebaseStorage.getInstance().reference
             val ref = storageReference.child("myImages/" + UUID.randomUUID().toString())
             try {
                 val puttingFile = ref.putFile(uri).await()
-                _uriUpdateSharedFlow.emit(if (puttingFile.task.isSuccessful) {
-                    val result = puttingFile.task.snapshot.metadata!!.reference!!.downloadUrl
-                    Ok(result.await())
-                } else {
-                    Err(Exception("Task's not successful"))
-                })
+                _uriUpdateSharedFlow.emit(
+                    if (puttingFile.task.isSuccessful) {
+                        val result = puttingFile.task.snapshot.metadata!!.reference!!.downloadUrl
+                        Ok(result.await())
+                    } else {
+                        Err(Exception("Task's not successful"))
+                    }
+                )
             } catch (e: Exception) {
                 e.printStackTrace()
                 _uriUpdateSharedFlow.emit(Err(e))

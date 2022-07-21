@@ -1,5 +1,6 @@
 package com.example.themovier.ui.screens.login
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -33,7 +34,7 @@ fun LoginScreen(
     viewModel: LoginScreenViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-    val showLoginForm = rememberSaveable {
+    var showLoginForm by rememberSaveable {
         mutableStateOf(true)
     }
     var loadingCircle by remember {
@@ -42,12 +43,14 @@ fun LoginScreen(
     var isLoginScreen by remember {
         mutableStateOf(true)
     }
+
     Scaffold(
-        topBar = { MovierAppBar(title = if (showLoginForm.value) "Login" else "SignUp") }
-    ) {
-        Column {
-            it
-            if (showLoginForm.value) {
+        topBar = { MovierAppBar(title = if (showLoginForm) "Login" else "SignUp") }
+    ) { padding ->
+        Column(
+            modifier = Modifier.padding(padding)
+        ) {
+            if (showLoginForm) {
                 UserForm(navController, isCreateAccount = false) { email, password ->
                     loadingCircle = true
                     viewModel.signInWithEmailAndPassword(email, password)
@@ -126,11 +129,11 @@ fun LoginScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val text = if (showLoginForm.value) "Sign Up" else "Login"
-                Text(text = if (showLoginForm.value) "New User?" else "Already Have an Account?")
+                val text = if (showLoginForm) "Sign Up" else "Login"
+                Text(text = if (showLoginForm) "New User?" else "Already Have an Account?")
                 Text(text = text,
                     modifier = Modifier
-                        .clickable { showLoginForm.value = !showLoginForm.value }
+                        .clickable { showLoginForm = !showLoginForm }
                         .padding(start = 5.dp),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colors.secondaryVariant)

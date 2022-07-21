@@ -39,10 +39,10 @@ class UserDataSourceImpl @Inject constructor() : UserDataSource {
             userId = userId,
             name = name,
             email = email,
-            profileUrl = "")
+            profileUrl = "",
+        )
         return try {
-            usersCollection
-                .add(user)
+            usersCollection.add(user)
             Exception("")
         } catch (e: Exception) {
             e
@@ -52,7 +52,7 @@ class UserDataSourceImpl @Inject constructor() : UserDataSource {
     override suspend fun updateUserProfileData(
         userHashMap: Map<String, Any>,
         userId: String,
-    ): Exception =
+    ): Exception = // rewrite to Result class
         withContext(Dispatchers.IO) {
             try {
                 val result = usersCollection
@@ -82,7 +82,7 @@ class UserDataSourceImpl @Inject constructor() : UserDataSource {
         try {
             val task = auth.createUserWithEmailAndPassword(email, password).await()
             task.user?.uid?.let { uid ->
-                val itemCreated = async { createUserItem(email, uid) }.await()
+                val itemCreated = createUserItem(email, uid)
                 val result = if (itemCreated.message.isNullOrBlank()) {
                     Exception("")
                 } else {

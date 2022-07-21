@@ -29,15 +29,16 @@ import com.example.themovier.ui.widgets.LoadingDialog
 import com.example.themovier.ui.widgets.showToast
 import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.onSuccess
+import kotlinx.coroutines.launch
 
 
 @Composable
 fun DrawerHeader(
+    viewModel: HomeScreenViewModel,
+    name: String,
     imageUrl: String,
     enabled: Boolean,
-    name: String,
     onUpdate: () -> Unit,
-    viewModel: HomeScreenViewModel,
     onImageClick: () -> Unit,
 ) {
     var imageUrlMy = imageUrl
@@ -50,7 +51,6 @@ fun DrawerHeader(
     var loadingCircle by remember {
         mutableStateOf(false)
     }
-
 
     val context = LocalContext.current
     Column(
@@ -102,17 +102,18 @@ fun DrawerHeader(
         }
 
         LaunchedEffect(Unit) {
-            viewModel.uriUpdateSharedFlow
-                .collect { result ->
-                    userUpdatingState = result
-                }
-        }
-
-        LaunchedEffect(Unit) {
-            viewModel.exceptionUpdateSharedFlow
-                .collect { result ->
-                    exceptionUpdatingState = result
-                }
+            launch {
+                viewModel.uriUpdateSharedFlow
+                    .collect { result ->
+                        userUpdatingState = result
+                    }
+            }
+            launch {
+                viewModel.exceptionUpdateSharedFlow
+                    .collect { result ->
+                        exceptionUpdatingState = result
+                    }
+            }
         }
 
         if (loadingCircle) {
@@ -151,11 +152,10 @@ fun DrawerHeader(
             exceptionUpdatingState?.let {
                 if (it.message.isNullOrBlank()) {
                     onUpdate()
-                    loadingCircle = false
                 } else {
                     showToast(context, it.message!!)
-                    loadingCircle = false
                 }
+                loadingCircle = false
             }
         }
 
