@@ -1,4 +1,4 @@
-package com.example.themovier.data.models
+package com.example.themovier.ui.models
 
 data class HomeUIModel(
     val posterUrl: String = "",

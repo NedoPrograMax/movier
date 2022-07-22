@@ -25,10 +25,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.themovier.data.datasource.FirebaseDataSourceImpl
 import com.example.themovier.data.models.Episode
-import com.example.themovier.data.models.UpdateModel
-import com.example.themovier.data.models.toDetails
+import com.example.themovier.ui.models.UpdateModel
+import com.example.themovier.ui.models.toDetails
 import com.example.themovier.data.utils.formatDate
 import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.screens.details.DetailsViewModel
@@ -46,7 +45,6 @@ fun UpdateScreen(
     var movie by remember {
         mutableStateOf<UpdateModel?>(UpdateModel())
     }
-    val firebaseDataSource = FirebaseDataSourceImpl()
 
     viewModel.getMovie(movieId!!)
     if (viewModel.data.value == null || viewModel.data.value?.type?.isBlank()!!) {
@@ -74,7 +72,7 @@ fun UpdateScreen(
                         onIconClick = { navController.popBackStack() },
                         actions = {
                             IconButton(onClick = {
-                                firebaseDataSource.deleteMovie(movieId)
+                                viewModel.deleteMovie(movieId)
                                 navController.popBackStack()
                             }) {
                                 Icon(

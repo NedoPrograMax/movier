@@ -1,8 +1,8 @@
-package com.example.themovier.ui.screens.home
+package com.example.themovier.ui.models
 
 import androidx.compose.ui.graphics.vector.ImageVector
 
-data class MenuItem(
+data class HomeScreenMenuItem(
     val id: String,
     val title: String,
     val contentDescription: String = "Icon",

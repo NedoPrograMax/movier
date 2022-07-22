@@ -1,5 +1,6 @@
 package com.example.themovier.ui.screens.home
 
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,16 +24,21 @@ import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.themovier.R
-import com.example.themovier.data.datasource.FirebaseDataSourceImpl
-import com.google.firebase.storage.FirebaseStorage
-import java.util.*
+import com.example.themovier.ui.models.HomeScreenMenuItem
+import com.example.themovier.ui.widgets.LoadingDialog
+import com.example.themovier.ui.widgets.showToast
+import com.github.michaelbull.result.Result
+import com.github.michaelbull.result.onSuccess
+import kotlinx.coroutines.launch
+
 
 @Composable
 fun DrawerHeader(
-    imageUrl: String,
-    userDocId: String,
-    enabled: Boolean,
+    viewModel: HomeScreenViewModel,
     name: String,
+    imageUrl: String,
+    enabled: Boolean,
+    onUpdate: () -> Unit,
     onImageClick: () -> Unit,
 ) {
     var imageUrlMy = imageUrl
@@ -42,8 +48,9 @@ fun DrawerHeader(
     var imageLoading by remember(enabled) {
         mutableStateOf(enabled)
     }
-    val firebaseDataSource = FirebaseDataSourceImpl()
-
+    var loadingCircle by remember {
+        mutableStateOf(false)
+    }
 
     val context = LocalContext.current
     Column(
@@ -71,7 +78,6 @@ fun DrawerHeader(
                 },
             contentDescription = "Profile Icon")
 
-        //   Text(text = "Name", fontSize = 24.sp)
         TextField(
             value = nameState.value,
             onValueChange = { nameState.value = it },
@@ -87,60 +93,83 @@ fun DrawerHeader(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        var userUpdatingState by remember {
+            mutableStateOf<Result<Uri, Exception>?>(null)
+        }
+
+        var exceptionUpdatingState by remember {
+            mutableStateOf<Exception?>(null)
+        }
+
+        LaunchedEffect(Unit) {
+            launch {
+                viewModel.uriUpdateSharedFlow
+                    .collect { result ->
+                        userUpdatingState = result
+                    }
+            }
+            launch {
+                viewModel.exceptionUpdateSharedFlow
+                    .collect { result ->
+                        exceptionUpdatingState = result
+                    }
+            }
+        }
+
+        if (loadingCircle) {
+            LoadingDialog()
+            if (enabled && nameState.value != name) {
+                userUpdatingState?.onSuccess { uri ->
+                    viewModel.updateUserProfileData(
+                        hashMapOf(
+                            "profileUrl" to uri.toString(),
+                            "name" to nameState.value,
+                        ) as Map<String, Any>,
+                    )
+                    //  loadingCircle = false
+                    //    onUpdate()
+                }
+
+            } else if (enabled) {
+                userUpdatingState?.onSuccess { uri ->
+                    viewModel.updateUserProfileData(
+                        hashMapOf(
+                            "profileUrl" to uri.toString(),
+                        ) as Map<String, Any>,
+                    )
+                    //    loadingCircle = false
+                    // onUpdate()
+                }
+            } else if (nameState.value != name) {
+                viewModel.updateUserProfileData(
+                    hashMapOf(
+                        "name" to nameState.value
+                    ) as Map<String, Any>,
+                )
+                //   loadingCircle = false
+                // onUpdate()
+            }
+            exceptionUpdatingState?.let {
+                if (it.message.isNullOrBlank()) {
+                    onUpdate()
+                } else {
+                    showToast(context, it.message!!)
+                }
+                loadingCircle = false
+            }
+        }
+
         Button(
             modifier = Modifier.fillMaxWidth(0.6f),
             enabled = (imageUrlMy.isNotBlank() && enabled) || (nameState.value != name),
             onClick = {
+                loadingCircle = true
                 if (enabled && nameState.value != name) {
-                    val storageReference = FirebaseStorage.getInstance().reference
-                    val ref = storageReference.child("myImages/" + UUID.randomUUID().toString())
-                    ref.putFile(imageUrlMy.toUri()).addOnSuccessListener { taskSnapshot ->
-                        if (taskSnapshot.task.isSuccessful) {
-                            taskSnapshot.task.snapshot.metadata!!.reference!!.downloadUrl.addOnSuccessListener { result ->
-                                imageUrlMy = result.toString()
-                                firebaseDataSource.updateUserProfileData(
-                                    hashMapOf(
-                                        "profileUrl" to imageUrlMy,
-                                        "name" to nameState.value,
-                                    ) as Map<String, Any>,
-                                    userDocId
-                                )
-                                Log.i("ImageTesti", imageUrlMy)
-                            }
+                    imageUrlMy = viewModel.putImage(imageUrlMy.toUri()).toString()
 
-                        }
-                    }
-                        .addOnFailureListener {
-                            Log.e("ImageTest", it.message!!)
-                        }
+
                 } else if (enabled) {
-                    val storageReference = FirebaseStorage.getInstance().reference
-                    val ref = storageReference.child("myImages/" + UUID.randomUUID().toString())
-                    ref.putFile(imageUrlMy.toUri()).addOnSuccessListener { taskSnapshot ->
-                        if (taskSnapshot.task.isSuccessful) {
-                            taskSnapshot.task.snapshot.metadata!!.reference!!.downloadUrl.addOnSuccessListener { result ->
-                                imageUrlMy = result.toString()
-                                firebaseDataSource.updateUserProfileData(
-                                    hashMapOf(
-                                        "profileUrl" to imageUrlMy
-                                    ) as Map<String, Any>,
-                                    userDocId
-                                )
-                                Log.i("ImageTesti", imageUrlMy)
-                            }
-
-                        }
-                    }
-                        .addOnFailureListener {
-                            Log.e("ImageTest", it.message!!)
-                        }
-                } else if (nameState.value != name) {
-                    firebaseDataSource.updateUserProfileData(
-                        hashMapOf(
-                            "name" to imageUrlMy
-                        ) as Map<String, Any>,
-                        userDocId
-                    )
+                    imageUrlMy = viewModel.putImage(imageUrlMy.toUri()).toString()
                 }
             }
         ) {
@@ -151,10 +180,10 @@ fun DrawerHeader(
 
 @Composable
 fun DrawerBody(
-    items: List<MenuItem>,
+    items: List<HomeScreenMenuItem>,
     modifier: Modifier = Modifier,
     itemTextStyle: TextStyle = TextStyle(fontSize = 18.sp),
-    onItemClick: (MenuItem) -> Unit,
+    onItemClick: (HomeScreenMenuItem) -> Unit,
 ) {
     LazyColumn(modifier) {
         items(items) { item ->

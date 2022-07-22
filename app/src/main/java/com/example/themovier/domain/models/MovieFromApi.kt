@@ -4,5 +4,5 @@ data class MovieFromApi(
     val page: Int,
     val results: List<Movie>,
     val total_pages: Int,
-    val total_results: Int
+    val total_results: Int,
 )

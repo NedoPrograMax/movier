@@ -19,8 +19,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.themovier.data.utils.LongPressDraggable
 import com.example.themovier.data.utils.isPermanentlyDenied
+import com.example.themovier.ui.models.HomeScreenMenuItem
 import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.widgets.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -92,7 +92,11 @@ fun HomeScreen(
                     actions = {
                         IconButton(onClick = {
                             Firebase.auth.signOut()
-                            navController.navigate(MovierScreens.LoginScreen.name)
+                            navController.navigate(MovierScreens.LoginScreen.name) {
+                                popUpTo(MovierScreens.HomeScreen.name) {
+                                    inclusive = true
+                                }
+                            }
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Logout,
@@ -106,9 +110,17 @@ fun HomeScreen(
                     imageUrl = if (imageState.value == null) userData.profileUrl else {
                         imageState.value.toString()
                     },
-                    userDocId = userData.id,
                     name = userData.name,
-                    enabled = imageState.value != null
+                    viewModel = viewModel,
+                    enabled = imageState.value != null,
+                    onUpdate = {
+                        imageState.value = null
+                        navController.navigate(MovierScreens.HomeScreen.name) {
+                            popUpTo(MovierScreens.HomeScreen.name) {
+                                inclusive = true
+                            }
+                        }
+                    },
                 ) {
                     permissionState.launchMultiplePermissionRequest()
                     val pickIntent =
@@ -117,12 +129,12 @@ fun HomeScreen(
                 }
                 DrawerBody(
                     items = listOf(
-                        MenuItem(
+                        HomeScreenMenuItem(
                             id = MovierScreens.AboutScreen.name,
                             title = "About",
                             icon = Icons.Default.Info
                         ),
-                        MenuItem(
+                        HomeScreenMenuItem(
                             id = MovierScreens.StatsScreen.name,
                             title = "Stats",
                             icon = Icons.Default.WorkHistory
@@ -154,7 +166,7 @@ fun HomeScreen(
 
 
     if (viewModel.loadingUser.value) {
-        CircularProgressIndicator()
+        LinearProgressIndicator()
     }
 }
 

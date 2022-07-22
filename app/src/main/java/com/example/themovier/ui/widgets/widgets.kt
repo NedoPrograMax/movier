@@ -35,12 +35,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.themovier.data.models.DetailsUIModel
 import com.example.themovier.data.models.Episode
-import com.example.themovier.data.models.HomeUIModel
-import com.example.themovier.data.utils.DragTarget
-import com.example.themovier.data.utils.DropTarget
 import com.example.themovier.data.utils.formatDate
+import com.example.themovier.ui.models.DetailsUIModel
+import com.example.themovier.ui.models.HomeUIModel
 import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.screens.home.HomeScreenViewModel
 import com.google.firebase.Timestamp

@@ -1,4 +1,4 @@
-package com.example.themovier.ui.di
+package com.example.themovier.di
 
 import com.example.themovier.data.apiservice.MovieApi
 import com.example.themovier.data.constants.Constants
