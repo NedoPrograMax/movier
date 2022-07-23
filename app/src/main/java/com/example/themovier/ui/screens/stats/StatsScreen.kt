@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.screens.home.HomeScreenViewModel
@@ -18,7 +19,10 @@ import com.example.themovier.ui.widgets.MovieItemsRow
 import com.example.themovier.ui.widgets.MovierAppBar
 
 @Composable
-fun StatsScreen(navController: NavController, viewModel: HomeScreenViewModel) {
+fun StatsScreen(
+    viewModel: HomeScreenViewModel = hiltViewModel(),
+    navController: NavController,
+) {
     Scaffold(
         topBar = {
             MovierAppBar(
@@ -35,7 +39,7 @@ fun StatsScreen(navController: NavController, viewModel: HomeScreenViewModel) {
         }
     ) {
         it
-        if (viewModel.loadingMovies.value && viewModel.dataMovies.value.isNullOrEmpty()) {
+        if (viewModel.loading.value && viewModel.dataMovies.value.isNullOrEmpty()) {
             LinearProgressIndicator()
         } else {
             StatsContent(navController = navController, viewModel)

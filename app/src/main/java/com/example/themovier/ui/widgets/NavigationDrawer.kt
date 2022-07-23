@@ -28,6 +28,7 @@ import com.example.themovier.ui.models.HomeScreenMenuItem
 import com.example.themovier.ui.widgets.LoadingDialog
 import com.example.themovier.ui.widgets.showToast
 import com.github.michaelbull.result.Result
+import com.github.michaelbull.result.fold
 import com.github.michaelbull.result.onSuccess
 
 
@@ -98,7 +99,7 @@ fun DrawerHeader(
         }
 
         var exceptionUpdatingState by remember {
-            mutableStateOf<Exception?>(null)
+            mutableStateOf<Result<Unit, Exception>?>(null)
         }
 
         LaunchedEffect(Unit) {
@@ -149,13 +150,16 @@ fun DrawerHeader(
                 // onUpdate()
             }
             exceptionUpdatingState?.let {
-                if (it.message.isNullOrBlank()) {
-                    onUpdate()
-                    loadingCircle = false
-                } else {
-                    showToast(context, it.message!!)
-                    loadingCircle = false
-                }
+                it.fold(
+                    {
+                        onUpdate()
+                        loadingCircle = false
+                    },
+                    {e->
+                        if(!e.message.isNullOrBlank())  showToast(context, e.message!!)
+                        loadingCircle = false
+                    }
+                )
             }
         }
 

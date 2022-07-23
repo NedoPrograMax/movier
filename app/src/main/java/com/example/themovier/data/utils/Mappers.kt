@@ -15,7 +15,7 @@ fun MovieDetails.toDetails(): DetailsUIModel = this.run {
         status = status,
         title = title,
         releaseDate = release_date,
-        posterUrl = poster_path
+        posterUrl = poster_path,
     )
 }
 
@@ -40,7 +40,7 @@ fun TvDetails.toDetails() = this.run {
         }.filter {
             it.season > 0
         }
-            .sortedBy { it.season }
+            .sortedBy { it.season },
     )
 }
 

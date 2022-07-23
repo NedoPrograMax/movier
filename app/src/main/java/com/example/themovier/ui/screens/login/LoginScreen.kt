@@ -22,39 +22,46 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.themovier.ui.navigation.MovierScreens
-import com.example.themovier.ui.widgets.EmailInput
-import com.example.themovier.ui.widgets.MovierAppBar
-import com.example.themovier.ui.widgets.PasswordInput
-import com.example.themovier.ui.widgets.showToast
+import com.example.themovier.ui.widgets.*
+import com.github.michaelbull.result.Result
+import com.github.michaelbull.result.fold
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
-    navController: NavController,
     viewModel: LoginScreenViewModel = hiltViewModel(),
+    navController: NavController,
 ) {
     val context = LocalContext.current
-    val showLoginForm = rememberSaveable {
+    var showLoginForm by rememberSaveable {
         mutableStateOf(true)
     }
-    var loadingCircle by remember {
-        mutableStateOf(false)
-    }
+
     var isLoginScreen by remember {
         mutableStateOf(true)
     }
+
+    var userCreationError by remember {
+        mutableStateOf<Result<Unit, Exception>?>(null)
+    }
+
+    var userLogInError by remember {
+        mutableStateOf<Result<Unit, Exception>?>(null)
+    }
+
     Scaffold(
-        topBar = { MovierAppBar(title = if (showLoginForm.value) "Login" else "SignUp") }
+        topBar = { MovierAppBar(title = if (showLoginForm) "Login" else "SignUp") }
     ) {
         Column {
             it
-            if (showLoginForm.value) {
+            if (showLoginForm) {
                 UserForm(navController, isCreateAccount = false) { email, password ->
-                    loadingCircle = true
+
                     viewModel.signInWithEmailAndPassword(email, password)
                 }
             } else {
                 UserForm(navController, isCreateAccount = true) { email, password ->
-                    loadingCircle = true
+
                     viewModel.createUserWithEmailAndPassword(
                         email,
                         password,
@@ -62,62 +69,65 @@ fun LoginScreen(
                 }
             }
 
-            var userCreationError by remember {
-                mutableStateOf<Exception?>(null)
-            }
 
-            var userLogInError by remember {
-                mutableStateOf<Exception?>(null)
-            }
             LaunchedEffect(Unit) {
-                viewModel.exceptionSignUpSharedFlow
-                    .collect { result ->
-                        userCreationError =  result
-                    }
-            }
-            LaunchedEffect(Unit){
-                viewModel.exceptionLogInSharedFlow
-                    .collect { result ->
-                        userLogInError =  result
-                    }
+                launch {
+                    viewModel.exceptionSignUpSharedFlow
+                        .collect { result ->
+                            userCreationError = result
+                        }
+                }
+                launch {
+                    viewModel.exceptionLogInSharedFlow
+                        .collect { result ->
+                            userLogInError = result
+                        }
+                }
             }
             if (isLoginScreen) {
-                userCreationError?.apply {
-                    loadingCircle = false
-                    if (message.isNullOrBlank()) {
-                        if (isLoginScreen) {
-                            navController.navigate(MovierScreens.HomeScreen.name) {
-
-                                popUpTo(MovierScreens.LoginScreen.name) {
-                                    inclusive = true
+                userCreationError?.let {
+                    it.fold(
+                        {
+                            if (isLoginScreen) {
+                                navController.navigate(MovierScreens.HomeScreen.name) {
+                                    popUpTo(MovierScreens.LoginScreen.name) {
+                                        inclusive = true
+                                    }
+                                    isLoginScreen = false
                                 }
-                                isLoginScreen = false
                             }
-                        }
 
-                    } else if (isLoginScreen) {
-                        showToast(context, message!!)
-                    }
+                        },
+                        { e ->
+                            showToast(context, e.message!!)
+
+                        }
+                    )
                     userCreationError = null
                 }
 
-                userLogInError?.apply {
-                    loadingCircle = false
-                    if (message.isNullOrBlank()) {
-                        if (isLoginScreen) {
-                            navController.navigate(MovierScreens.HomeScreen.name) {
-                                popUpTo(MovierScreens.LoginScreen.name) {
-                                    inclusive = true
+                userLogInError?.let {
+                    it.fold(
+                        {
+                            if (isLoginScreen) {
+                                navController.navigate(MovierScreens.HomeScreen.name) {
+                                    popUpTo(MovierScreens.LoginScreen.name) {
+                                        inclusive = true
+                                    }
+                                    isLoginScreen = false
                                 }
-                                isLoginScreen = false
+                            }
+
+                        },
+                        { e ->
+                            if (isLoginScreen) {
+                                showToast(context, e.message!!)
                             }
                         }
-
-                    } else if (isLoginScreen) {
-                        showToast(context, message!!)
-                    }
+                    )
                     userLogInError = null
                 }
+
             }
 
             Spacer(modifier = Modifier.height(15.dp))
@@ -126,18 +136,18 @@ fun LoginScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val text = if (showLoginForm.value) "Sign Up" else "Login"
-                Text(text = if (showLoginForm.value) "New User?" else "Already Have an Account?")
+                val text = if (showLoginForm) "Sign Up" else "Login"
+                Text(text = if (showLoginForm) "New User?" else "Already Have an Account?")
                 Text(text = text,
                     modifier = Modifier
-                        .clickable { showLoginForm.value = !showLoginForm.value }
+                        .clickable { showLoginForm = !showLoginForm }
                         .padding(start = 5.dp),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colors.secondaryVariant)
             }
 
-            if (loadingCircle) {
-                CircularProgressIndicator()
+            if (viewModel.loading) {
+                LoadingDialog()
             }
         }
     }

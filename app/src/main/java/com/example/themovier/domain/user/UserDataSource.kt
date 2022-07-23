@@ -1,5 +1,6 @@
 package com.example.themovier.domain.user
 
+import android.net.Uri
 import com.example.themovier.domain.models.MovierUserModel
 import com.github.michaelbull.result.Result
 import java.util.*
@@ -9,16 +10,18 @@ interface UserDataSource {
     suspend fun createUserWithEmailAndPassword(
         email: String,
         password: String,
-    ): Exception
+    ): Result<Unit, Exception>
 
-    suspend fun createUserItem(email: String, userId: String): Exception
+    suspend fun createUserItem(email: String, userId: String): Result<Unit, Exception>
     suspend fun signInWithEmailAndPassword(
         email: String,
         password: String,
-    ): Exception
+    ): Result<Unit, Exception>
 
     suspend fun updateUserProfileData(
         userHashMap: Map<String, Any>,
         userId: String,
-    ): Exception
+    ): Result<Unit, Exception>
+
+    suspend fun putImage(uri: Uri): Result<Uri, Exception>
 }

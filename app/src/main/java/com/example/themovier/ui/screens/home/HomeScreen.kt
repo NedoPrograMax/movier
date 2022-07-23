@@ -34,10 +34,10 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun HomeScreen(
+    viewModel: HomeScreenViewModel = hiltViewModel(),
     navController: NavController,
     selectImageLauncher: ActivityResultLauncher<Intent>,
     imageState: MutableState<Uri?>,
-    viewModel: HomeScreenViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val scaffoldState = rememberScaffoldState()
@@ -149,13 +149,14 @@ fun HomeScreen(
                     navController.navigate(MovierScreens.SearchScreen.name)
                 }
             }
-        ) {
-            it
+        ) { padding ->
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 verticalArrangement = Arrangement.Center
             ) {
-                if (viewModel.loadingMovies.value && viewModel.dataMovies.value.isNullOrEmpty()) {
+                if (viewModel.loading.value && viewModel.dataMovies.value.isNullOrEmpty()) {
                     LinearProgressIndicator()
                 } else {
                     HomeContent(navController = navController, viewModel)
@@ -165,7 +166,7 @@ fun HomeScreen(
     }
 
 
-    if (viewModel.loadingUser.value) {
+    if (viewModel.loading.value) {
         LinearProgressIndicator()
     }
 }
@@ -184,10 +185,10 @@ fun HomeContent(
         mutableStateOf(false)
     }
 
-    val watchedMovieList = viewModel.dataMovies.value?.filter { movie ->
+    val watchedMovieList = viewModel.dataMovies.value.filter { movie ->
         movie.startDate.isNotBlank() && movie.finishDate.isBlank()
     }!!
-    val unwatchedMovieList = viewModel.dataMovies.value?.filter { movie ->
+    val unwatchedMovieList = viewModel.dataMovies.value.filter { movie ->
         movie.startDate.isBlank()
     }!!
     val displayMetrics = LocalContext.current.resources.displayMetrics

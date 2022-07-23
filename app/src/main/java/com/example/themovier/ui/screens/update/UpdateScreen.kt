@@ -37,9 +37,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun UpdateScreen(
+    viewModel: UpdateViewModel = hiltViewModel(),
     navController: NavController,
     movieId: String?,
-    viewModel: UpdateViewModel = hiltViewModel(),
     detailsViewModel: DetailsViewModel = hiltViewModel(),
 ) {
     var movie by remember {
@@ -392,7 +392,7 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
                                     "season" to season,
                                     "favoriteEpisodes" to favoriteEpisodes.value,
                                     "resource" to resourceState.value,
-                                    "episode" to episode
+                                    "episode" to episode,
                                 ) as Map<String, Any>
                             )
                             .addOnSuccessListener {

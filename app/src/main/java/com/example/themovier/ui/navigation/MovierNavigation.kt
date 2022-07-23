@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -29,23 +28,26 @@ fun MovierNavigation(
     NavHost(navController = navController, startDestination = MovierScreens.SplashScreen.name) {
 
         composable(MovierScreens.SplashScreen.name) {
-            SplashScreen(navController)
+            SplashScreen(navController = navController)
         }
 
         composable(MovierScreens.HomeScreen.name) {
-            HomeScreen(navController, selectImageLauncher, imageState)
+            HomeScreen(
+                navController = navController,
+                selectImageLauncher = selectImageLauncher,
+                imageState = imageState)
         }
 
         composable(MovierScreens.LoginScreen.name) {
-            LoginScreen(navController)
+            LoginScreen(navController = navController)
         }
 
         composable(MovierScreens.AboutScreen.name) {
-            AboutScreen(navController)
+            AboutScreen(navController = navController)
         }
 
         composable(MovierScreens.SearchScreen.name) {
-            SearchScreen(navController)
+            SearchScreen(navController = navController)
         }
 
         val detailsRoot = MovierScreens.DetailsScreen.name
@@ -63,7 +65,9 @@ fun MovierNavigation(
             val movieId = backStackEntry.arguments?.getString("movieId")
             val movieType = backStackEntry.arguments?.getString("movieType")
             if (!movieId.isNullOrBlank() && !movieType.isNullOrBlank()) {
-                DetailsScreen(navController, movieId = movieId, movieType = movieType)
+                DetailsScreen(navController = navController,
+                    movieId = movieId,
+                    movieType = movieType)
             }
 
         }
@@ -75,12 +79,12 @@ fun MovierNavigation(
             }))
         { backStackEntry ->
             backStackEntry.arguments?.getString("movieId").let { movieId ->
-                UpdateScreen(navController, movieId)
+                UpdateScreen(navController = navController, movieId = movieId)
             }
         }
 
         composable(MovierScreens.StatsScreen.name) {
-            StatsScreen(navController, hiltViewModel())
+            StatsScreen(navController = navController)
         }
     }
 }

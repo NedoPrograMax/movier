@@ -1,5 +1,6 @@
 package com.example.themovier.data.user
 
+import android.net.Uri
 import android.util.Log
 import com.example.themovier.domain.models.MovierUserModel
 import com.example.themovier.domain.user.UserDataSource
@@ -8,10 +9,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.util.*
 import javax.inject.Inject
 
 class UserDataSourceImpl @Inject constructor() : UserDataSource {
@@ -33,26 +36,27 @@ class UserDataSourceImpl @Inject constructor() : UserDataSource {
             }
         }
 
-    override suspend fun createUserItem(email: String, userId: String): Exception {
+    override suspend fun createUserItem(email: String, userId: String): Result<Unit, Exception> {
         val name = email.split("@")[0]
         val user = MovierUserModel(
             userId = userId,
             name = name,
             email = email,
-            profileUrl = "")
+            profileUrl = "",
+        )
         return try {
             usersCollection
                 .add(user)
-            Exception("")
+            Ok(Unit)
         } catch (e: Exception) {
-            e
+            Err(e)
         }
     }
 
     override suspend fun updateUserProfileData(
         userHashMap: Map<String, Any>,
         userId: String,
-    ): Exception =
+    ): Result<Unit, Exception> =
         withContext(Dispatchers.IO) {
             try {
                 val result = usersCollection
@@ -64,52 +68,67 @@ class UserDataSourceImpl @Inject constructor() : UserDataSource {
                     .reference
                     .update(userHashMap)
 
-                if (result.isSuccessful) {
-                    Exception("")
-                } else {
-                    result.exception!!
+
+                if (result.isComplete || result.exception == null) Ok(Unit)
+                else {
+                    Log.e("USERRRR", result.exception.toString())
+                    Err(result.exception!!)
                 }
+
+
             } catch (e: Exception) {
+                Log.e("USERRRR", e.toString())
                 e.printStackTrace()
-                e
+                Err(e)
             }
         }
+
+    override suspend fun putImage(uri: Uri): Result<Uri, Exception> = withContext(Dispatchers.IO) {
+        val storageReference = FirebaseStorage.getInstance().reference
+        val ref = storageReference.child("myImages/" + UUID.randomUUID().toString())
+        try {
+            val puttingFile = ref.putFile(uri).await()
+            (if (puttingFile.task.isSuccessful) {
+                val result = puttingFile.task.snapshot.metadata!!.reference!!.downloadUrl
+                Ok(result.await())
+            } else {
+                Err(Exception("Task's not successful"))
+            })
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Err(e)
+        }
+    }
 
     override suspend fun createUserWithEmailAndPassword(
         email: String,
         password: String,
-    ): Exception = withContext(Dispatchers.IO) {
+    ): Result<Unit, Exception> = withContext(Dispatchers.IO) {
         try {
             val task = auth.createUserWithEmailAndPassword(email, password).await()
             task.user?.uid?.let { uid ->
-                val itemCreated = async { createUserItem(email, uid) }.await()
-                val result = if (itemCreated.message.isNullOrBlank()) {
-                    Exception("")
-                } else {
-                    itemCreated
-                }
-
-                result
-            } ?: Exception("user id is not provided")
+                val itemCreated = createUserItem(email, uid)
+                itemCreated
+            } ?: Err(Exception("user id is not provided"))
         } catch (e: Exception) {
             e.printStackTrace()
-            e
+            Err(e)
         }
     }
 
     override suspend fun signInWithEmailAndPassword(
         email: String,
         password: String,
-    ): Exception = withContext(Dispatchers.IO) {
+    ): Result<Unit, Exception> = withContext(Dispatchers.IO) {
         try {
             val user = auth.signInWithEmailAndPassword(email, password)
                 .await()
             val result = user.user?.uid?.isNotBlank()!!
-            if (result) Exception("")
-            else Exception("user id is not provided")
+            if (result) Ok(Unit)
+            else Err(Exception("user id is not provided"))
         } catch (e: Exception) {
             e.printStackTrace()
-            e
+            Err(e)
         }
     }
 

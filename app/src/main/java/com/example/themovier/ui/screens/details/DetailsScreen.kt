@@ -28,9 +28,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun DetailsScreen(
+    viewModel: DetailsViewModel = hiltViewModel(),
     navController: NavController,
     movieId: String?,
-    viewModel: DetailsViewModel = hiltViewModel(),
     movieType: String,
 ) {
 

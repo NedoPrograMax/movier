@@ -30,8 +30,8 @@ import com.example.themovier.ui.widgets.MovierAppBar
 
 @Composable
 fun SearchScreen(
-    navController: NavController,
     viewModel: SearchScreenViewModel = hiltViewModel(),
+    navController: NavController,
 ) {
 
     Scaffold(
