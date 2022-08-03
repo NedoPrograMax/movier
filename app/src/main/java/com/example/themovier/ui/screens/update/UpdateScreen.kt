@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,9 +27,9 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.themovier.data.models.Episode
+import com.example.themovier.data.utils.formatDate
 import com.example.themovier.ui.models.UpdateModel
 import com.example.themovier.ui.models.toDetails
-import com.example.themovier.data.utils.formatDate
 import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.screens.details.DetailsViewModel
 import com.example.themovier.ui.widgets.*
@@ -42,27 +43,28 @@ fun UpdateScreen(
     movieId: String?,
     detailsViewModel: DetailsViewModel = hiltViewModel(),
 ) {
-    var movie by remember {
-        mutableStateOf<UpdateModel?>(UpdateModel())
-    }
 
-    viewModel.getMovie(movieId!!)
-    if (viewModel.data.value == null || viewModel.data.value?.type?.isBlank()!!) {
+
+    viewModel.processIntent(UpdateIntent.GetMovie(movieId!!))
+    if (viewModel.state.data == null || viewModel.state.data?.type?.isBlank()!!) {
         LinearProgressIndicator()
     } else {
-        movie = viewModel.data.value
-        detailsViewModel.searchMovie(movieId = movie!!.idDb.toString(), movieType = movie!!.type)
+        val movie = viewModel.state.data
+        detailsViewModel.searchMovie(movieId = movie!!.idDb.toString(), movieType = movie.type)
         if (detailsViewModel.data == null || detailsViewModel.data!!.title.isBlank()) {
             CircularProgressIndicator()
         } else {
             detailsViewModel.data?.apply {
-                movie!!.status = status
-                movie!!.language = language
-                movie!!.description = description
-                movie!!.genres = genres
-                movie!!.seasons = seasons
-                movie!!.releaseDate = releaseDate
-                movie!!.posterUrl = posterUrl
+                movie.status = status
+                movie.language = language
+                movie.description = description
+                movie.genres = genres
+                movie.seasons = seasons
+                movie.releaseDate = releaseDate
+                movie.posterUrl = posterUrl
+            }
+            if (viewModel.state.note == null) {
+                viewModel.processIntent(UpdateIntent.SetNote(movie.note))
             }
             Scaffold(
                 topBar = {
@@ -72,7 +74,7 @@ fun UpdateScreen(
                         onIconClick = { navController.popBackStack() },
                         actions = {
                             IconButton(onClick = {
-                                viewModel.deleteMovie(movieId)
+                                viewModel.processIntent(UpdateIntent.DeleteMovie(movieId))
                                 navController.popBackStack()
                             }) {
                                 Icon(
@@ -86,20 +88,16 @@ fun UpdateScreen(
                 }
             ) { padding ->
                 padding
-                movie?.let { UpdateContent(navController, it) }
+                movie.let { UpdateContent(viewModel, navController, it) }
             }
         }
     }
 }
 
 @Composable
-fun UpdateContent(navController: NavController, movie: UpdateModel) {
+fun UpdateContent(viewModel: UpdateViewModel, navController: NavController, movie: UpdateModel) {
     val context = LocalContext.current
-    var detailsType by remember {
-        mutableStateOf("details")
-    }
     LazyColumn(
-        //  modifier = Modifier.scrollable(scroll, orientation = Orientation.Vertical),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
@@ -127,9 +125,9 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
-                        selected = detailsType == "details",
+                        selected = viewModel.state.updateType == UpdateType.Details,
                         onClick = {
-                            detailsType = "details"
+                            viewModel.processIntent(UpdateIntent.SetUpdateType(UpdateType.Details))
                         },
                     )
                     Text(text = "Details")
@@ -137,9 +135,9 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
-                        selected = detailsType == "update",
+                        selected = viewModel.state.updateType == UpdateType.Update,
                         onClick = {
-                            detailsType = "update"
+                            viewModel.processIntent(UpdateIntent.SetUpdateType(UpdateType.Update))
                         },
                     )
                     Text(text = "Update")
@@ -147,37 +145,29 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
             }
 
 
-            if (detailsType == "details") {
+            if (viewModel.state.updateType == UpdateType.Details) {
                 movie.toDetails().MovieDescription()
             }
 
+            var startWatching by rememberSaveable { mutableStateOf(movie.startDate) }
 
-            val noteState = remember {
-                mutableStateOf(movie.note)
-            }
+            var finishWatching by rememberSaveable { mutableStateOf(movie.finishDate) }
 
-            val noteChange = remember(noteState.value) {
-                noteState.value != movie.note
-            }
-
-            var startWatching by remember { mutableStateOf(movie.startDate) }
-
-            var finishWatching by remember { mutableStateOf(movie.finishDate) }
-
-            var someButtonClicked by remember {
+            var someButtonClicked by rememberSaveable {
                 mutableStateOf(false)
             }
 
-            if (detailsType == "update") {
-                InputField(
-                    valueState = noteState,
+            if (viewModel.state.updateType == UpdateType.Update) {
+                InputFieldNote(
+                    value = viewModel.state.note,
+                    onValueChange = { viewModel.processIntent(UpdateIntent.SetNote(it)) },
                     labelId = "Your notes",
                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
                     textStyle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 )
             } else {
                 Text(
-                    text = "Note: " + noteState.value,
+                    text = "Note: " + viewModel.state.note,
                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
                     style = MaterialTheme.typography.h6,
                     fontWeight = FontWeight.Light
@@ -185,7 +175,7 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
             }
 
             if (startWatching.isBlank()) {
-                if (detailsType == "update") {
+                if (viewModel.state.updateType == UpdateType.Update) {
                     Button(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.padding(vertical = 6.dp),
@@ -201,7 +191,7 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
                 Text(text = "Started Watching at: $startWatching", fontSize = 20.sp)
 
                 if (finishWatching.isBlank()) {
-                    if (detailsType == "update") {
+                    if (viewModel.state.updateType == UpdateType.Update) {
                         Button(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.padding(vertical = 6.dp),
@@ -215,7 +205,7 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
                     }
                 } else {
                     Text(text = "Finished Watching at: $finishWatching", fontSize = 20.sp)
-                    if (detailsType == "update") {
+                    if (viewModel.state.updateType == UpdateType.Update) {
                         Button(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.padding(vertical = 6.dp),
@@ -237,12 +227,12 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
                 .map {
                     it.toString()
                 }
-            var episode by remember { mutableStateOf(movie.episode) }
+            var episode by rememberSaveable { mutableStateOf(movie.episode) }
 
-            var favSeason by remember { mutableStateOf(1) }
-            var favEpisode by remember { mutableStateOf(1) }
+            var favSeason by rememberSaveable { mutableStateOf(1) }
+            var favEpisode by rememberSaveable { mutableStateOf(1) }
 
-            val favoriteEpisodes = remember {
+            val favoriteEpisodes = rememberSaveable {
                 mutableStateOf(movie.favoriteEpisodes)
             }
 
@@ -292,7 +282,7 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
 
                     TextButton(
                         onClick = { showSeasonDialog.value = true },
-                        enabled = detailsType == "update"
+                        enabled = viewModel.state.updateType == UpdateType.Update
                     ) {
                         Text(text = "Season: $season")
                     }
@@ -308,7 +298,7 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
 
                     TextButton(
                         onClick = { showEpisodeDialog.value = true },
-                        enabled = detailsType == "update") {
+                        enabled = viewModel.state.updateType == UpdateType.Update) {
                         Text(text = "Episode: $episode")
                     }
                 }
@@ -327,7 +317,7 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
                     ChooseDialog(setShowDialog = { showFavEpisodeDialog.value = it },
                         listOfStrings = favEpisodeList,
                         onItemClick = {
-                            if (detailsType == "update") {
+                            if (viewModel.state.updateType == UpdateType.Update) {
                                 favEpisode = it.toInt()
                                 showFavEpisodeDialog.value = false
 
@@ -339,7 +329,7 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
                         })
                 }
 
-                if (detailsType == "update") {
+                if (viewModel.state.updateType == UpdateType.Update) {
                     TextButton(onClick = {
                         showFavSeasonDialog.value = true
                         if (favSeason != 1 && favEpisode != 1) {
@@ -358,7 +348,7 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
                 mutableStateOf(movie.resource)
             }
 
-            if (detailsType == "update") {
+            if (viewModel.state.updateType == UpdateType.Update) {
                 InputField(valueState = resourceState,
                     labelId = "Resource of your movie",
                     modifier = Modifier.fillMaxWidth(0.8f))
@@ -373,12 +363,12 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
                 }
             }
 
-            if (detailsType == "update") {
+            if (viewModel.state.updateType == UpdateType.Update) {
 
                 Button(
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth(0.4f),
-                    enabled = noteChange || someButtonClicked || movie.season != season || movie.episode != episode
+                    enabled =   viewModel.state.note != movie.note || someButtonClicked || movie.season != season || movie.episode != episode
                             || movie.favoriteEpisodes != favoriteEpisodes.value.toList()
                             || resourceState.value != movie.resource,
                     onClick = {
@@ -386,7 +376,7 @@ fun UpdateContent(navController: NavController, movie: UpdateModel) {
                             .document(movie.id)
                             .update(
                                 hashMapOf(
-                                    "note" to noteState.value,
+                                    "note" to viewModel.state.note,
                                     "startDate" to startWatching,
                                     "finishDate" to finishWatching,
                                     "season" to season,

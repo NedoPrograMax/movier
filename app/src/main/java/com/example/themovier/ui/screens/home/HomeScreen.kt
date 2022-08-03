@@ -75,7 +75,7 @@ fun HomeScreen(
             }
         }
     }
-    val userData = viewModel.dataUser.value
+    val userData = viewModel.state.dataUser
     userData?.let {
         Log.d("TestingUser", userData.name)
         Scaffold(
@@ -156,7 +156,7 @@ fun HomeScreen(
                     .padding(padding),
                 verticalArrangement = Arrangement.Center
             ) {
-                if (viewModel.loading.value && viewModel.dataMovies.value.isNullOrEmpty()) {
+                if (viewModel.state.loading && viewModel.state.dataMovies.isEmpty()) {
                     LinearProgressIndicator()
                 } else {
                     HomeContent(navController = navController, viewModel)
@@ -166,7 +166,7 @@ fun HomeScreen(
     }
 
 
-    if (viewModel.loading.value) {
+    if (viewModel.state.loading) {
         LinearProgressIndicator()
     }
 }
@@ -185,12 +185,12 @@ fun HomeContent(
         mutableStateOf(false)
     }
 
-    val watchedMovieList = viewModel.dataMovies.value.filter { movie ->
+    val watchedMovieList = viewModel.state.dataMovies.filter { movie ->
         movie.startDate.isNotBlank() && movie.finishDate.isBlank()
-    }!!
-    val unwatchedMovieList = viewModel.dataMovies.value.filter { movie ->
+    }
+    val unwatchedMovieList = viewModel.state.dataMovies.filter { movie ->
         movie.startDate.isBlank()
-    }!!
+    }
     val displayMetrics = LocalContext.current.resources.displayMetrics
     val screenHeight = displayMetrics.heightPixels / displayMetrics.density
     val screenWidth = displayMetrics.widthPixels / displayMetrics.density

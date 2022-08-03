@@ -39,7 +39,7 @@ fun StatsScreen(
         }
     ) {
         it
-        if (viewModel.loading.value && viewModel.dataMovies.value.isNullOrEmpty()) {
+        if (viewModel.state.loading && viewModel.state.dataMovies.isEmpty()) {
             LinearProgressIndicator()
         } else {
             StatsContent(navController = navController, viewModel)
@@ -57,7 +57,7 @@ fun StatsContent(navController: NavController, viewModel: HomeScreenViewModel) {
         .width((screenWidth * 0.45).dp)
         .height((screenHeight * 0.3).dp)
 
-    val watchedMovieList = viewModel.dataMovies.value?.filter { movierItem ->
+    val watchedMovieList = viewModel.state.dataMovies.filter { movierItem ->
         movierItem.finishDate.isNotBlank()
     }!!
 

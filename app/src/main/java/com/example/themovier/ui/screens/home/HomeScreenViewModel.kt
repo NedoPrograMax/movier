@@ -3,7 +3,9 @@ package com.example.themovier.ui.screens.home
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -32,15 +34,8 @@ class HomeScreenViewModel @Inject constructor(
 
     private val currentUserId = FirebaseAuth.getInstance().currentUser!!.uid
 
- //   var loadingUser = mutableStateOf(false)
-    val dataUser: MutableState<MovierUserModel?> =
-        mutableStateOf(null)
-
-    val loading = mutableStateOf(false)
-
-  //  var loadingMovies = mutableStateOf(false)
-    val dataMovies: MutableState<List<HomeUIModel>> =
-        mutableStateOf(listOf())
+    var state by mutableStateOf(HomeState())
+        private set
 
     private val _uriUpdateSharedFlow = MutableSharedFlow<Result<Uri, Exception>>()
     val uriUpdateSharedFlow = _uriUpdateSharedFlow.asSharedFlow()
@@ -49,37 +44,62 @@ class HomeScreenViewModel @Inject constructor(
     val exceptionUpdateSharedFlow = _exceptionUpdateSharedFlow.asSharedFlow()
 
     init {
-        getUserData()
-        getUserMovies()
+        processIntent(HomeIntent.GetUserData)
+        processIntent(HomeIntent.GetUserMovies)
+    }
+
+    fun processIntent(intent: HomeIntent) {
+        when (intent) {
+            is HomeIntent.GetUserData -> getUserData()
+            is HomeIntent.GetUserMovies -> getUserMovies()
+            is HomeIntent.UpdateUserProfileData -> updateUserProfileData(intent.map)
+            is HomeIntent.PutImage -> putImage(intent.uri)
+        }
     }
 
     private fun getUserData(userId: String = currentUserId) =
         viewModelScope.launch {
-            loading.value = true
+            state = state.copy(
+                loading = true,
+            )
             userDataSource.getUserInfo(userId).fold(
-                { dataUser.value = it },
+                { dataUser ->
+                    state = state.copy(
+                        dataUser = dataUser,
+                    )
+
+                },
                 { it.printStackTrace() }
             )
-            loading.value = false
+
+            state = state.copy(
+                loading = false,
+            )
         }
 
-    fun getUserMovies(userId: String = currentUserId) =
+    private fun getUserMovies(userId: String = currentUserId) =
         viewModelScope.launch {
-            loading.value = true
-            movieDataSource.getUserMovies(userId).onSuccess {
-                dataMovies.value = it.map { movierItem ->
-                    HomeUIModel(
-                        id = movierItem.id,
-                        startDate = movierItem.startDate,
-                        finishDate = movierItem.finishDate,
-                        posterUrl = movierItem.posterUrl
-                    )
-                }
+            state = state.copy(
+                loading = true,
+            )
+            movieDataSource.getUserMovies(userId).onSuccess { dataMovies ->
+                state = state.copy(
+                    dataMovies = dataMovies.map { movierItem ->
+                        HomeUIModel(
+                            id = movierItem.id,
+                            startDate = movierItem.startDate,
+                            finishDate = movierItem.finishDate,
+                            posterUrl = movierItem.posterUrl
+                        )
+                    }
+                )
             }
-            loading.value = false
+            state = state.copy(
+                loading = false,
+            )
         }
 
-    fun updateUserProfileData(
+    private fun updateUserProfileData(
         map: Map<String, Any>,
         userId: String = currentUserId,
     ) =
@@ -88,7 +108,7 @@ class HomeScreenViewModel @Inject constructor(
             _exceptionUpdateSharedFlow.emit(result)
         }
 
-    fun putImage(uri: Uri) {
+    private fun putImage(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
             _uriUpdateSharedFlow.emit(userDataSource.putImage(uri))
         }

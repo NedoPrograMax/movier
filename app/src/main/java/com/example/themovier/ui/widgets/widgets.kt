@@ -40,6 +40,7 @@ import com.example.themovier.data.utils.formatDate
 import com.example.themovier.ui.models.DetailsUIModel
 import com.example.themovier.ui.models.HomeUIModel
 import com.example.themovier.ui.navigation.MovierScreens
+import com.example.themovier.ui.screens.home.HomeIntent
 import com.example.themovier.ui.screens.home.HomeScreenViewModel
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -76,7 +77,7 @@ fun AddingArea(isAdding: MutableState<Boolean>, viewModel: HomeScreenViewModel, 
                     .document(homeItem.id)
                     .update(hashMap)
                     .addOnSuccessListener {
-                        viewModel.getUserMovies(FirebaseAuth.getInstance().currentUser!!.uid)
+                        viewModel.processIntent(HomeIntent.GetUserMovies)
                     }
                     .addOnFailureListener {
                         Log.e("CheckingSmth", it.message!!)
@@ -212,6 +213,38 @@ fun InputField(
     OutlinedTextField(
         value = valueState.value,
         onValueChange = { valueState.value = it },
+        label = { Text(text = labelId) },
+        singleLine = isSingleLine,
+        textStyle = textStyle,
+        modifier = modifier
+            .padding(bottom = 10.dp, start = 10.dp, end = 10.dp)
+            .fillMaxWidth(),
+        enabled = enabled,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
+        keyboardActions = onAction,
+        visualTransformation = visualTransformation,
+        trailingIcon = trailingIcon,
+    )
+}
+
+@Composable
+fun InputFieldNote(
+    value: String?,
+    onValueChange: (String) -> Unit,
+    labelId: String,
+    isSingleLine: Boolean = true,
+    modifier: Modifier,
+    enabled: Boolean = true,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    imeAction: ImeAction = ImeAction.Next,
+    textStyle: TextStyle = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onBackground),
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailingIcon: @Composable (() -> Unit)? = {},
+    onAction: KeyboardActions = KeyboardActions.Default,
+) {
+    OutlinedTextField(
+        value = value ?: "",
+        onValueChange = onValueChange,
         label = { Text(text = labelId) },
         singleLine = isSingleLine,
         textStyle = textStyle,

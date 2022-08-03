@@ -45,13 +45,9 @@ fun DrawerHeader(
     val nameState = remember {
         mutableStateOf(name)
     }
-    var imageLoading by remember(enabled) {
-        mutableStateOf(enabled)
-    }
     var loadingCircle by remember {
         mutableStateOf(false)
     }
-
 
     val context = LocalContext.current
     Column(
@@ -120,43 +116,38 @@ fun DrawerHeader(
             LoadingDialog()
             if (enabled && nameState.value != name) {
                 userUpdatingState?.onSuccess { uri ->
-                    viewModel.updateUserProfileData(
+                    viewModel.processIntent(HomeIntent.UpdateUserProfileData(
                         hashMapOf(
                             "profileUrl" to uri.toString(),
                             "name" to nameState.value,
                         ) as Map<String, Any>,
-                    )
-                    //  loadingCircle = false
-                    //    onUpdate()
+                    ))
                 }
 
             } else if (enabled) {
                 userUpdatingState?.onSuccess { uri ->
-                    viewModel.updateUserProfileData(
+                    viewModel.processIntent(HomeIntent.UpdateUserProfileData(
                         hashMapOf(
                             "profileUrl" to uri.toString(),
                         ) as Map<String, Any>,
-                    )
-                    //    loadingCircle = false
-                    // onUpdate()
+                    ))
                 }
             } else if (nameState.value != name) {
-                viewModel.updateUserProfileData(
+                viewModel.processIntent(HomeIntent.UpdateUserProfileData(
                     hashMapOf(
                         "name" to nameState.value
                     ) as Map<String, Any>,
-                )
-                //   loadingCircle = false
-                // onUpdate()
+                ))
             }
             exceptionUpdatingState?.let {
                 it.fold(
                     {
                         onUpdate()
+
                         loadingCircle = false
                     },
-                    {e->
-                        if(!e.message.isNullOrBlank())  showToast(context, e.message!!)
+                    { e ->
+                        if (!e.message.isNullOrBlank()) showToast(context, e.message!!)
                         loadingCircle = false
                     }
                 )
@@ -169,11 +160,13 @@ fun DrawerHeader(
             onClick = {
                 loadingCircle = true
                 if (enabled && nameState.value != name) {
-                    imageUrlMy = viewModel.putImage(imageUrlMy.toUri()).toString()
+                    imageUrlMy =
+                        viewModel.processIntent(HomeIntent.PutImage(imageUrlMy.toUri())).toString()
 
 
                 } else if (enabled) {
-                    imageUrlMy = viewModel.putImage(imageUrlMy.toUri()).toString()
+                    imageUrlMy =
+                        viewModel.processIntent(HomeIntent.PutImage(imageUrlMy.toUri())).toString()
                 }
             }
         ) {
