@@ -1,26 +1,22 @@
 package com.example.themovier.ui.screens.update
 
 import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.themovier.ui.models.UpdateModel
 import com.example.themovier.data.utils.toUpdateModel
 import com.example.themovier.domain.movie.MovieDataSource
-import com.example.themovier.ui.screens.home.HomeIntent
 import com.github.michaelbull.result.onSuccess
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class UpdateViewModel @Inject constructor(private val movieDataSource: MovieDataSource) :
     ViewModel() {
-    var state by mutableStateOf(UpdateState())
-        private set
+    private val _state = MutableStateFlow(UpdateState())
+    val state: StateFlow<UpdateState> get() = _state
 
     fun processIntent(intent: UpdateIntent) {
         when (intent) {
@@ -33,11 +29,11 @@ class UpdateViewModel @Inject constructor(private val movieDataSource: MovieData
 
     private fun getMovie(movieId: String) =
         viewModelScope.launch {
-            state = state.copy(loading = true)
+            setLoading(true)
             movieDataSource.getMovie(movieId).onSuccess {
-                state = state.copy(data = it.toUpdateModel())
-                if (state.data != null) {
-                    state = state.copy(loading = false)
+                _state.emit(_state.value.copy(data = it.toUpdateModel()))
+                if (_state.value.data != null) {
+                    setLoading(false)
                     return@launch
                 }
             }
@@ -49,12 +45,24 @@ class UpdateViewModel @Inject constructor(private val movieDataSource: MovieData
         }
 
     private fun setNote(note: String) {
-        Log.d("NoteTag", note)
-        state = state.copy(note = note)
+        viewModelScope.launch {
+            Log.d("NoteTag", note)
+            _state.emit(_state.value.copy(note = note))
+        }
     }
 
     private fun setUpdateType(type: UpdateType) {
-        state = state.copy(updateType = type)
+        viewModelScope.launch {
+            _state.emit(_state.value.copy(updateType = type))
+        }
     }
+
+
+    private fun setLoading(value: Boolean) {
+        viewModelScope.launch {
+            _state.emit(_state.value.copy(loading = value))
+        }
+    }
+
 }
 

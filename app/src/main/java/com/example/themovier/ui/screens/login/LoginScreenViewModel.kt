@@ -6,10 +6,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.themovier.domain.user.UserDataSource
+import com.example.themovier.ui.screens.home.HomeAction
 import com.github.michaelbull.result.Result
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -17,11 +19,10 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginScreenViewModel @Inject constructor(private val userDataSource: UserDataSource) :
     ViewModel() {
-    private val _exceptionSignUpSharedFlow = MutableSharedFlow<Result<Unit, Exception>>()
-    val exceptionSignUpSharedFlow = _exceptionSignUpSharedFlow.asSharedFlow()
 
-    private val _exceptionLogInSharedFlow = MutableSharedFlow<Result<Unit, Exception>>()
-    val exceptionLogInSharedFlow = _exceptionLogInSharedFlow.asSharedFlow()
+    private val _action = MutableSharedFlow<LoginAction>()
+    val action: SharedFlow<LoginAction> get() = _action
+
 
     var loading by
     mutableStateOf(false)
@@ -36,7 +37,7 @@ class LoginScreenViewModel @Inject constructor(private val userDataSource: UserD
             email = email,
             password = password,
         )
-        _exceptionSignUpSharedFlow.emit(result)
+        _action.emit(LoginAction.ExceptionSignUp(result))
         loading = false
     }
 
@@ -49,7 +50,7 @@ class LoginScreenViewModel @Inject constructor(private val userDataSource: UserD
             email = email,
             password = password,
         )
-        _exceptionLogInSharedFlow.emit(result)
+        _action.emit(LoginAction.ExceptionLogIn(result))
         loading = false
     }
 

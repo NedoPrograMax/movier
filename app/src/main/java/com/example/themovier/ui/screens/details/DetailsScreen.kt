@@ -1,5 +1,6 @@
 package com.example.themovier.ui.screens.details
 
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +21,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.themovier.domain.models.MovierItemModel
+import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.widgets.MovieDescription
 import com.example.themovier.ui.widgets.MovierAppBar
 import com.example.themovier.ui.widgets.showToast
@@ -34,6 +36,8 @@ fun DetailsScreen(
     movieType: String,
 ) {
 
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+
     var isFavoriteIcon by remember {
         mutableStateOf(false)
     }
@@ -41,13 +45,17 @@ fun DetailsScreen(
 
     var movierId = ""
 
+    Log.d("navcont", navController.backQueue.toString())
+
 
     Scaffold(
         topBar = {
             MovierAppBar(
                 title = "Details",
                 icon = Icons.Default.ArrowBack,
-                onIconClick = { navController.popBackStack() },
+                onIconClick = {
+                    navController.popBackStack()
+                },
                 actions = {
                     IconButton(onClick = {
                         if (!isFavoriteIcon) {
@@ -84,13 +92,14 @@ fun DetailsScreen(
 
         } else {
             FirebaseFirestore.getInstance().collection("movies")
-                .whereEqualTo("idDb", movieId)
+                .whereEqualTo("idDb", movieId.toInt())
                 .get()
                 .addOnSuccessListener { document ->
                     val movieList = document.toObjects(MovierItemModel::class.java)
                     if (movieList.any {
+                            Log.d("CheckSmth", it.id)
                             movierId = it.id
-                            it.userId == FirebaseAuth.getInstance().currentUser!!.uid
+                            it.userId == currentUserId && it.type == movieType
                         }) {
                         isFavoriteIcon = true
                     }

@@ -1,5 +1,6 @@
 package com.example.themovier.ui.screens.search
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -12,8 +13,11 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -33,6 +37,7 @@ fun SearchScreen(
     viewModel: SearchScreenViewModel = hiltViewModel(),
     navController: NavController,
 ) {
+
 
     Scaffold(
         topBar = {
@@ -142,7 +147,10 @@ fun MovieCardInGrid(movie: Movie, navController: NavController, movieType: Strin
             .build(),
         modifier = Modifier
             .fillMaxSize()
-            .clickable { navController.navigate(MovierScreens.DetailsScreen.name + "/${movie.id}" + "/${movieType}") },
+            .clickable {
+                Log.d("MyMovie",
+                    movie.id.toString()); navController.navigate(MovierScreens.DetailsScreen.name + "/${movie.id}" + "/${movieType}")
+            },
         contentScale = ContentScale.Fit,
         contentDescription = "Movie Image"
     )

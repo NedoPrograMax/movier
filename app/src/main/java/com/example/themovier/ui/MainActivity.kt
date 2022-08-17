@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -16,7 +17,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.example.themovier.ui.navigation.MovierNavigation
+import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.theme.TheMovierTheme
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -34,23 +37,30 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MovierApp(selectImageLauncher, imageState)
+            MovierApp(selectImageLauncher, imageState, intent)
         }
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun MovierApp(selectImageLauncher: ActivityResultLauncher<Intent>, imageState: MutableState<Uri?>) {
+fun MovierApp(
+    selectImageLauncher: ActivityResultLauncher<Intent>,
+    imageState: MutableState<Uri?>,
+    intent: Intent,
+) {
     TheMovierTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colors.background
         ) {
-            val navController = rememberNavController()
-            MovierNavigation(navController = navController, selectImageLauncher, imageState)
-
+            val navController = rememberAnimatedNavController()
+            MovierNavigation(navController = navController,
+                selectImageLauncher,
+                imageState, )
         }
     }
-
 }
+
+
 

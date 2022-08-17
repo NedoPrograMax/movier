@@ -1,29 +1,21 @@
 package com.example.themovier.ui.screens.home
 
 import android.net.Uri
-import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.themovier.ui.models.HomeUIModel
-import com.example.themovier.domain.models.MovierUserModel
 import com.example.themovier.domain.movie.MovieDataSource
 import com.example.themovier.domain.user.UserDataSource
-import com.github.michaelbull.result.*
+import com.example.themovier.ui.models.HomeUIModel
+import com.github.michaelbull.result.fold
+import com.github.michaelbull.result.onSuccess
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -34,18 +26,17 @@ class HomeScreenViewModel @Inject constructor(
 
     private val currentUserId = FirebaseAuth.getInstance().currentUser!!.uid
 
-    var state by mutableStateOf(HomeState())
-        private set
 
-    private val _uriUpdateSharedFlow = MutableSharedFlow<Result<Uri, Exception>>()
-    val uriUpdateSharedFlow = _uriUpdateSharedFlow.asSharedFlow()
+    private val _state = MutableStateFlow(HomeState())
+    val state: StateFlow<HomeState> get() = _state
 
-    private val _exceptionUpdateSharedFlow = MutableSharedFlow<Result<Unit, Exception>>()
-    val exceptionUpdateSharedFlow = _exceptionUpdateSharedFlow.asSharedFlow()
+    private val _action = MutableSharedFlow<HomeAction>()
+    val action: SharedFlow<HomeAction> get() = _action
+
 
     init {
-        processIntent(HomeIntent.GetUserData)
-        processIntent(HomeIntent.GetUserMovies)
+        getUserData()
+        getUserMovies()
     }
 
     fun processIntent(intent: HomeIntent) {
@@ -59,31 +50,22 @@ class HomeScreenViewModel @Inject constructor(
 
     private fun getUserData(userId: String = currentUserId) =
         viewModelScope.launch {
-            state = state.copy(
-                loading = true,
-            )
+            setLoading(true)
             userDataSource.getUserInfo(userId).fold(
                 { dataUser ->
-                    state = state.copy(
-                        dataUser = dataUser,
-                    )
-
+                    _state.emit(_state.value.copy(dataUser = dataUser))
                 },
                 { it.printStackTrace() }
             )
 
-            state = state.copy(
-                loading = false,
-            )
+            setLoading(false)
         }
 
     private fun getUserMovies(userId: String = currentUserId) =
         viewModelScope.launch {
-            state = state.copy(
-                loading = true,
-            )
+            setLoading(true)
             movieDataSource.getUserMovies(userId).onSuccess { dataMovies ->
-                state = state.copy(
+                _state.emit(_state.value.copy(
                     dataMovies = dataMovies.map { movierItem ->
                         HomeUIModel(
                             id = movierItem.id,
@@ -92,11 +74,9 @@ class HomeScreenViewModel @Inject constructor(
                             posterUrl = movierItem.posterUrl
                         )
                     }
-                )
+                ))
             }
-            state = state.copy(
-                loading = false,
-            )
+            setLoading(false)
         }
 
     private fun updateUserProfileData(
@@ -105,12 +85,19 @@ class HomeScreenViewModel @Inject constructor(
     ) =
         viewModelScope.launch(Dispatchers.IO) {
             val result = userDataSource.updateUserProfileData(map, userId)
-            _exceptionUpdateSharedFlow.emit(result)
+            _action.emit(HomeAction.ExceptionUpdateSharedFlow(result))
+
         }
 
     private fun putImage(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
-            _uriUpdateSharedFlow.emit(userDataSource.putImage(uri))
+            _action.emit(HomeAction.UriUpdateSharedFlow(userDataSource.putImage(uri)))
+        }
+    }
+
+    private fun setLoading(value: Boolean) {
+        viewModelScope.launch {
+            _state.emit(_state.value.copy(loading = value))
         }
     }
 

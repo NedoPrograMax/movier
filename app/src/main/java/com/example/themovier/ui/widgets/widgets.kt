@@ -48,7 +48,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.random.Random
 
 @Composable
-fun AddingArea(isAdding: MutableState<Boolean>, viewModel: HomeScreenViewModel, title: String) {
+fun AddingArea(isAdding: MutableState<Boolean> , viewModel: HomeScreenViewModel, title: String) {
 
     val context = LocalContext.current
 
@@ -107,17 +107,49 @@ fun AddingArea(isAdding: MutableState<Boolean>, viewModel: HomeScreenViewModel, 
 
         }
     }
-    //  }
+
+}
+
+@Composable
+fun LoadingAddingArea(title: String) {
+    Surface(
+        modifier = Modifier
+            .padding(6.dp)
+            .fillMaxWidth()
+            .height(30.dp)
+    ) {
+        val bgColor =
+            Color.Transparent
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .shadow(elevation = 4.dp, shape = RoundedCornerShape(16.dp))
+                .background(
+                    bgColor,
+                    RoundedCornerShape(16.dp)
+                ),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Text(
+                text = title,
+                fontSize = 18.sp,
+                color = Color.Red,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+
+        }
+    }
 }
 
 @Composable
 fun MovieItemCard(
     movieItem: HomeUIModel,
     isAdding: MutableState<Boolean>? = null,
-    modifier: Modifier,
-    screenHeight: Float,
     navController: NavController,
-    screenWidth: Float,
 ) {
     val context = LocalContext.current
     val image by remember(movieItem) {
@@ -138,8 +170,8 @@ fun MovieItemCard(
                     .build(),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .width((screenWidth * 0.40).dp)
-                    .height((screenHeight * 0.34).dp)
+                    .width(160.dp)
+                    .height(230.dp)
                     .padding(2.dp)
                     .clip(
                         RoundedCornerShape(16.dp)
@@ -159,8 +191,8 @@ fun MovieItemCard(
                 .build(),
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .width((screenWidth * 0.40).dp)
-                .height((screenHeight * 0.34).dp)
+                .width(160.dp)
+                .height(230.dp)
                 .padding(2.dp)
                 .clip(
                     RoundedCornerShape(16.dp)
@@ -177,21 +209,16 @@ fun MovieItemCard(
 @Composable
 fun MovieItemsRow(
     movieList: List<HomeUIModel>,
-    cardModifier: Modifier = Modifier,
     isAdding: MutableState<Boolean>? = null,
-    screenHeight: Float,
     navController: NavController,
-    screenWidth: Float,
 ) {
-    LazyRow {
+    LazyRow(modifier = Modifier.fillMaxWidth()) {
         items(movieList) { item ->
             MovieItemCard(
                 movieItem = item,
                 isAdding = isAdding,
-                modifier = cardModifier,
-                screenHeight = screenHeight,
                 navController = navController,
-                screenWidth = screenWidth)
+            )
         }
     }
 }

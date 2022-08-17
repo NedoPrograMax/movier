@@ -71,17 +71,15 @@ fun LoginScreen(
 
 
             LaunchedEffect(Unit) {
-                launch {
-                    viewModel.exceptionSignUpSharedFlow
-                        .collect { result ->
-                            userCreationError = result
+                viewModel.action.collect { action ->
+                    when (action) {
+                        is LoginAction.ExceptionSignUp -> {
+                            userCreationError = action.result
                         }
-                }
-                launch {
-                    viewModel.exceptionLogInSharedFlow
-                        .collect { result ->
-                            userLogInError = result
+                        is LoginAction.ExceptionLogIn -> {
+                            userLogInError = action.result
                         }
+                    }
                 }
             }
             if (isLoginScreen) {

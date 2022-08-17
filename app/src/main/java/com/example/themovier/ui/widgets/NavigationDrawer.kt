@@ -1,7 +1,6 @@
 package com.example.themovier.ui.screens.home
 
 import android.net.Uri
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -99,18 +98,32 @@ fun DrawerHeader(
         }
 
         LaunchedEffect(Unit) {
-            viewModel.uriUpdateSharedFlow
-                .collect { result ->
-                    userUpdatingState = result
+            viewModel.action.collect { action ->
+                when (action) {
+                    is HomeAction.UriUpdateSharedFlow -> {
+                        userUpdatingState = action.result
+                    }
+                    is HomeAction.ExceptionUpdateSharedFlow -> {
+                        exceptionUpdatingState = action.result
+                    }
                 }
+            }
+            /*    viewModel.uriUpdateSharedFlow
+                    .collect { result ->
+                        userUpdatingState = result
+                    }
+
+             */
         }
 
-        LaunchedEffect(Unit) {
-            viewModel.exceptionUpdateSharedFlow
-                .collect { result ->
-                    exceptionUpdatingState = result
-                }
-        }
+        /*   LaunchedEffect(Unit) {
+               viewModel.exceptionUpdateSharedFlow
+                   .collect { result ->
+                       exceptionUpdatingState = result
+                   }
+           }
+
+         */
 
         if (loadingCircle) {
             LoadingDialog()
