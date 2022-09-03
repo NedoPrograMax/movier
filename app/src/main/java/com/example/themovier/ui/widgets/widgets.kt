@@ -3,11 +3,13 @@ package com.example.themovier.ui.widgets
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -15,8 +17,10 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Password
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -35,20 +39,27 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.themovier.data.models.Comment
 import com.example.themovier.data.models.Episode
 import com.example.themovier.data.utils.formatDate
+import com.example.themovier.data.utils.getNumberOfLikes
+import com.example.themovier.data.utils.onLikeClick
 import com.example.themovier.ui.models.DetailsUIModel
+import com.example.themovier.ui.models.FullComment
 import com.example.themovier.ui.models.HomeUIModel
+import com.example.themovier.ui.models.UpdateUiModel
 import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.screens.home.HomeIntent
 import com.example.themovier.ui.screens.home.HomeScreenViewModel
+import com.example.themovier.ui.screens.update.UpdateState
+import com.example.themovier.ui.screens.update.UpdateViewModel
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.random.Random
 
 @Composable
-fun AddingArea(isAdding: MutableState<Boolean> , viewModel: HomeScreenViewModel, title: String) {
+fun AddingArea(isAdding: MutableState<Boolean>, viewModel: HomeScreenViewModel, title: String) {
 
     val context = LocalContext.current
 
@@ -382,49 +393,240 @@ fun FavoriteEpisodes(
 }
 
 @Composable
-fun DetailsUIModel.MovieDescription() {
+fun DetailsUIModel.MovieDescription(
+    listComment: Map<String, Comment>? = null,
+    viewModel: UpdateViewModel? = null,
+    onUpdate: (Map<String, Comment>) -> Unit = {},
+
+    ) {
 
     Column(
         horizontalAlignment = Alignment.Start
     ) {
+
+        Text(
+            text = "Movie Info",
+            modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Light,
+        )
+
+        Text(
+            text = "Description",
+            modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+        )
+
         Text(
             text = description,
             modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-            style = MaterialTheme.typography.h6,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Light,
         )
+
+        DescriptionRow(title = "Movie Title", text = title)
 
         val genress = genres.map {
             it.name
         }.toString()
 
+        DescriptionRow(title = "Genres", text = genress)
 
-        Text(
-            text = "Genres: $genress",
-            modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-            style = MaterialTheme.typography.h6,
-            fontWeight = FontWeight.Light
-        )
+        DescriptionRow(title = "Status", text = status)
 
-        Text(
-            text = "Status: $status",
-            modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-            style = MaterialTheme.typography.h6,
-            fontWeight = FontWeight.Light
-        )
+        DescriptionRow(title = "Language", text = language)
 
-        Text(
-            text = "Language: $language",
-            modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-            style = MaterialTheme.typography.h6,
-            fontWeight = FontWeight.Light
-        )
+        DescriptionRow(title = "Release Date", text = releaseDate)
 
-        Text(
-            text = "Release Date: $releaseDate",
-            modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-            style = MaterialTheme.typography.h6,
-            fontWeight = FontWeight.Light
-        )
+        if (listComment != null) {
+            CommentsColumn(list = comments, listComment, onUpdate, viewModel!!)
+        }
+
     }
+}
+
+@Composable
+fun DescriptionRow(title: String, text: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            text = title,
+            modifier = Modifier
+                .padding(vertical = 4.dp, horizontal = 1.dp)
+                .weight(1F),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Start,
+        )
+
+        Text(
+            text = text,
+            modifier = Modifier
+                .padding(vertical = 4.dp, horizontal = 1.dp)
+                .weight(1F),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Light,
+            textAlign = TextAlign.Start,
+        )
+
+        Spacer(modifier = Modifier.weight(1F))
+    }
+}
+
+@Composable
+fun CommentsColumn(
+    list: Map<String, FullComment>,
+    listComment: Map<String, Comment>,
+    onUpdate: (Map<String, Comment>) -> Unit,
+    viewModel: UpdateViewModel,
+) {
+    Text(
+        text = "Comments",
+        modifier = Modifier
+            .padding(vertical = 4.dp, horizontal = 1.dp)
+            .fillMaxWidth(),
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center,
+    )
+
+
+    Column {
+        CommentItem(list, listComment, onUpdate, viewModel)
+    }
+}
+
+@Composable
+private fun CommentItem(
+    list: Map<String, FullComment>,
+    listComment: Map<String, Comment>,
+    onUpdate: (Map<String, Comment>) -> Unit,
+    viewModel: UpdateViewModel,
+) {
+    val context = LocalContext.current
+    val state by viewModel.state.collectAsState()
+    list.forEach { (id, item) ->
+        val hadUserLiked =
+            state.listComment!![id]!!.likeUsersIdList.contains(FirebaseAuth.getInstance().currentUser?.uid)
+
+        var isLiked by remember {
+            mutableStateOf(hadUserLiked)
+        }
+
+        Card(
+            modifier = Modifier.padding(5.dp),
+            border = BorderStroke(2.dp, MaterialTheme.colors.primary),
+            elevation = 6.dp,
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalAlignment = Alignment.Start,
+            ) {
+                Row(
+                    verticalAlignment = CenterVertically
+                ) {
+
+                    Column(
+                        modifier = Modifier.padding(end = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(item.userPicture)
+                                .crossfade(true)
+                                .build(),
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .clip(
+                                    CircleShape
+                                )
+                                .size(32.dp),
+                            contentDescription = "User Image"
+                        )
+
+                        Text(
+                            text = item.userName,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+
+                    }
+
+                    Text(
+                        text = item.comment.text,
+                        fontSize = 12.sp,
+                    )
+
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = {
+                        val newItem =
+                            state.listComment!![id]!!.copy(likeUsersIdList = state.listComment!![id]!!.likeUsersIdList.onLikeClick())
+                        val newList =  state.listComment!!.minus(id).plus(id to newItem)
+
+                        Log.d("Weee", newList.toString())
+                        onUpdate(newList)
+                        isLiked = !isLiked
+                    }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ThumbUp,
+                            contentDescription = "Like",
+                            tint = if (isLiked) Color.Red else Color.LightGray,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                    Text(
+                        text =
+                        getNumberOfLikes(hadUserLiked,
+                            isLiked,
+                            state.listComment!![id]!!.likeUsersIdList.size).toString(),
+                        fontSize = 14.sp,
+                    )
+                }
+            }
+        }
+    }
+}
+
+fun MutableList<String>.color() = this.run {
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+    if (contains(currentUserId)) Color.Red
+    else Color.LightGray
+}
+
+@Composable
+fun isUpdateButtonEnabled(
+    state: UpdateState,
+    movie: UpdateUiModel,
+    someButtonClicked: Boolean,
+    season: Int,
+    episode: Int,
+    favoriteEpisodes: MutableState<List<Episode>>,
+    resourceState: MutableState<String>,
+): Boolean {
+   /* Log.d("Wrrr",
+        (state.note != movie.note).toString() + " | " + (someButtonClicked).toString() + " | " + (movie.season != season).toString()
+                + " | " + (movie.episode != episode).toString() + " | " + (movie.favoriteEpisodes != favoriteEpisodes.value.toList()).toString()
+                + " | " + (resourceState.value != movie.resource).toString() + " | " + (state.listComment != state.data?.comments?.map { it.comment }).toString())
+    Log.d("Wrrre", state.listComment!!.sortedBy {
+        it.authorId
+    }.toString())
+    Log.d("Wrrre", state.data?.comments?.map { it.comment }!!.sortedBy {
+        it.authorId
+    }.toString())
+
+    */
+    return (state.note != movie.note || someButtonClicked || movie.season != season || movie.episode != episode
+            || movie.favoriteEpisodes != favoriteEpisodes.value.toList()
+            || resourceState.value != movie.resource || state.listComment != state.data?.comments?.mapValues { it.value.comment })
 }

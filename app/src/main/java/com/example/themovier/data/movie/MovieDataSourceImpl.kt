@@ -2,6 +2,7 @@ package com.example.themovier.data.movie
 
 import android.util.Log
 import com.example.themovier.domain.models.MovierItemModel
+import com.example.themovier.domain.models.TotalMovie
 import com.example.themovier.domain.movie.MovieDataSource
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
@@ -15,6 +16,7 @@ import javax.inject.Inject
 class MovieDataSourceImpl @Inject constructor() : MovieDataSource {
     private val firebaseFirestore = FirebaseFirestore.getInstance()
     private val moviesCollection = firebaseFirestore.collection("movies")
+    private val totalMoviesCollection = firebaseFirestore.collection("totalMovies")
 
 
     override suspend fun getUserMovies(userId: String): Result<List<MovierItemModel>, Throwable> =
@@ -78,5 +80,50 @@ class MovieDataSourceImpl @Inject constructor() : MovieDataSource {
             }
     }
 
+    override suspend fun createTotalMovie(totalMovie: TotalMovie): Result<Unit, Exception> {
+        return try {
+            totalMoviesCollection
+                .add(totalMovie)
+            Ok(Unit)
+        } catch (e: Exception) {
+            Err(e)
+        }
+    }
 
+    override suspend fun getTotalMovie(idDb: String, type: String): Result<TotalMovie, Exception> =
+        withContext(Dispatchers.IO) {
+            try {
+                val totalMovie =
+                    totalMoviesCollection.whereEqualTo("idDb", idDb).get().await().map { document ->
+                        document.toObject(TotalMovie::class.java)
+                    }.filter { item ->
+                        item.type == type
+                    }.first()
+                Ok(totalMovie)
+            } catch (e: Exception) {
+                Err(e)
+            }
+        }
+
+    override suspend fun updateTotalMovieData(
+        totalMovieHashMap: Map<String, Any>,
+        idDb: String,
+        type: String,
+    ): Unit =
+        withContext(Dispatchers.IO) {
+            try {
+                totalMoviesCollection
+                    .whereEqualTo("idDb", idDb)
+                    .get()
+                    .await()
+                    .documents.first {
+                        it.toObject(TotalMovie::class.java)?.type == type
+                    }
+                    .reference
+                    .update(totalMovieHashMap)
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
 }

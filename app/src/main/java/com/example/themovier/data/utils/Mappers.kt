@@ -2,7 +2,7 @@ package com.example.themovier.data.utils
 
 import com.example.themovier.ui.models.DetailsUIModel
 import com.example.themovier.data.models.Episode
-import com.example.themovier.ui.models.UpdateModel
+import com.example.themovier.ui.models.UpdateUiModel
 import com.example.themovier.domain.models.MovieDetails
 import com.example.themovier.domain.models.MovierItemModel
 import com.example.themovier.domain.models.TvDetails
@@ -46,7 +46,7 @@ fun TvDetails.toDetails() = this.run {
 
 
 fun MovierItemModel.toUpdateModel() = this.run {
-    UpdateModel(
+    UpdateUiModel(
         note = note,
         resource = resource,
         season = season,

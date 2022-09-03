@@ -2,9 +2,11 @@ package com.example.themovier.ui.screens.details
 
 import android.util.Log
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
@@ -14,14 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.themovier.domain.models.MovierItemModel
-import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.widgets.MovieDescription
 import com.example.themovier.ui.widgets.MovierAppBar
 import com.example.themovier.ui.widgets.showToast
@@ -128,16 +127,7 @@ fun DetailsContent(viewModel: DetailsViewModel) {
                     contentDescription = "Movie Image"
                 )
 
-                Text(
-                    text = title,
-                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-                    style = MaterialTheme.typography.h5,
-                    fontWeight = FontWeight.Bold
-                )
-
-                MovieDescription()
-
-
+                     MovieDescription()
             }
         }
     }

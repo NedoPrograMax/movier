@@ -4,14 +4,15 @@ import android.net.Uri
 import android.util.Log
 import com.example.themovier.domain.models.MovierUserModel
 import com.example.themovier.domain.user.UserDataSource
-import com.github.michaelbull.result.*
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.*
@@ -31,6 +32,19 @@ class UserDataSourceImpl @Inject constructor() : UserDataSource {
                         document.toObject(MovierUserModel::class.java)
                     }.first()
                 Ok(user)
+            } catch (e: Exception) {
+                Err(e)
+            }
+        }
+
+    override suspend fun getUsersInfo(list: List<String>): Result<List<MovierUserModel>, Throwable> =
+        withContext(Dispatchers.IO) {
+            try {
+                val users =
+                    usersCollection.whereIn("userId", list).get().await().map { document ->
+                        document.toObject(MovierUserModel::class.java)
+                    }
+                Ok(users)
             } catch (e: Exception) {
                 Err(e)
             }

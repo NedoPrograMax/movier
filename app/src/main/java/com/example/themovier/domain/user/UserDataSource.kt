@@ -7,6 +7,9 @@ import java.util.*
 
 interface UserDataSource {
     suspend fun getUserInfo(userId: String): Result<MovierUserModel, Throwable>
+
+    suspend fun getUsersInfo(list: List<String>): Result<List<MovierUserModel>, Throwable>
+
     suspend fun createUserWithEmailAndPassword(
         email: String,
         password: String,

@@ -1,5 +1,6 @@
 package com.example.themovier.ui.screens.update
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,14 +27,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.themovier.data.models.Comment
 import com.example.themovier.data.models.Episode
 import com.example.themovier.data.utils.formatDate
-import com.example.themovier.ui.models.UpdateModel
+import com.example.themovier.domain.models.TotalMovie
+import com.example.themovier.ui.models.UpdateUiModel
 import com.example.themovier.ui.models.toDetails
 import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.screens.details.DetailsViewModel
 import com.example.themovier.ui.widgets.*
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
@@ -46,15 +50,23 @@ fun UpdateScreen(
 
     val state by viewModel.state.collectAsState()
 
-    viewModel.processIntent(UpdateIntent.GetMovie(movieId!!))
-    if (state.data == null || state.data?.type?.isBlank()!!) {
-        AnimatedShimmer(navController = navController,screen = MovierScreens.UpdateScreen)
+    LaunchedEffect(key1 = Unit) {
+        viewModel.processIntent(UpdateIntent.GetMovie(movieId!!))
+    }
+
+
+    if (state.data == null || state.data?.type?.isBlank()!! || state.loading) {
+        AnimatedShimmer(navController = navController, screen = MovierScreens.UpdateScreen)
     } else {
+
         val movie = state.data
         detailsViewModel.searchMovie(movieId = movie!!.idDb.toString(), movieType = movie.type)
+        //viewModel.processIntent(UpdateIntent.GetTotalMovie(idDb = movie.idDb.toString(),
+        //       type = movie.type))
         if (detailsViewModel.data == null || detailsViewModel.data!!.title.isBlank()) {
-            AnimatedShimmer(navController = navController,screen = MovierScreens.UpdateScreen)
+            AnimatedShimmer(navController = navController, screen = MovierScreens.UpdateScreen)
         } else {
+
             detailsViewModel.data?.apply {
                 movie.status = status
                 movie.language = language
@@ -75,7 +87,7 @@ fun UpdateScreen(
                         onIconClick = { navController.popBackStack() },
                         actions = {
                             IconButton(onClick = {
-                                viewModel.processIntent(UpdateIntent.DeleteMovie(movieId))
+                                viewModel.processIntent(UpdateIntent.DeleteMovie(movieId!!))
                                 navController.popBackStack()
                             }) {
                                 Icon(
@@ -89,14 +101,15 @@ fun UpdateScreen(
                 }
             ) { padding ->
                 padding
-               movie.let { UpdateContent(viewModel, navController, it) }
+                //  viewModel.processIntent(UpdateIntent.UpdateCommentList(state.data?.comments?.map { it.comment }!!))
+                movie.let { UpdateContent(viewModel, navController, it) }
             }
         }
     }
 }
 
 @Composable
-fun UpdateContent(viewModel: UpdateViewModel, navController: NavController, movie: UpdateModel) {
+fun UpdateContent(viewModel: UpdateViewModel, navController: NavController, movie: UpdateUiModel) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsState()
     LazyColumn(
@@ -139,6 +152,8 @@ fun UpdateContent(viewModel: UpdateViewModel, navController: NavController, movi
                     RadioButton(
                         selected = state.updateType == UpdateType.Update,
                         onClick = {
+                            //Log.d("Wooow", state.listComment.toString())
+                            // Log.d("Woooe", state.data?.comments?.map { it.comment }.toString())
                             viewModel.processIntent(UpdateIntent.SetUpdateType(UpdateType.Update))
                         },
                     )
@@ -146,9 +161,12 @@ fun UpdateContent(viewModel: UpdateViewModel, navController: NavController, movi
                 }
             }
 
-
+            Log.d("AAAR", "aaaaaaa")
             if (state.updateType == UpdateType.Details) {
-                movie.toDetails().MovieDescription()
+
+                movie.toDetails().MovieDescription(state.listComment, viewModel = viewModel) {
+                    viewModel.processIntent(UpdateIntent.UpdateCommentList(it))
+                }
             }
 
             var startWatching by rememberSaveable { mutableStateOf(movie.startDate) }
@@ -166,13 +184,6 @@ fun UpdateContent(viewModel: UpdateViewModel, navController: NavController, movi
                     labelId = "Your notes",
                     modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
                     textStyle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                )
-            } else {
-                Text(
-                    text = "Note: " + state.note,
-                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-                    style = MaterialTheme.typography.h6,
-                    fontWeight = FontWeight.Light
                 )
             }
 
@@ -270,7 +281,12 @@ fun UpdateContent(viewModel: UpdateViewModel, navController: NavController, movi
                 }
 
 
-                Text(text = "You stopped at ")
+                TextButton(onClick = {
+                    Log.d("Wrrr", state.note + " | " + movie.note)
+                }) {
+                    Text(text = "You stopped at ")
+                }
+
 
                 Row {
                     if (showSeasonDialog.value) {
@@ -367,54 +383,149 @@ fun UpdateContent(viewModel: UpdateViewModel, navController: NavController, movi
 
             if (state.updateType == UpdateType.Update) {
 
-                Button(
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.fillMaxWidth(0.4f),
-                    enabled =   state.note != movie.note || someButtonClicked || movie.season != season || movie.episode != episode
-                            || movie.favoriteEpisodes != favoriteEpisodes.value.toList()
-                            || resourceState.value != movie.resource,
-                    onClick = {
-                        FirebaseFirestore.getInstance().collection("movies")
-                            .document(movie.id)
-                            .update(
-                                hashMapOf(
-                                    "note" to state.note,
-                                    "startDate" to startWatching,
-                                    "finishDate" to finishWatching,
-                                    "season" to season,
-                                    "favoriteEpisodes" to favoriteEpisodes.value,
-                                    "resource" to resourceState.value,
-                                    "episode" to episode,
-                                ) as Map<String, Any>
-                            )
-                            .addOnSuccessListener {
-                                if (finishWatching.isBlank()) {
-                                    navController.navigate(MovierScreens.HomeScreen.name) {
-                                        popUpTo(MovierScreens.UpdateScreen.name) {
-                                            inclusive = true
-                                        }
-                                    }
-                                } else {
-                                    navController.navigate(MovierScreens.StatsScreen.name) {
-                                        popUpTo(MovierScreens.UpdateScreen.name) {
-                                            inclusive = true
-                                        }
-                                    }
-                                }
-                            }
-                    }
-                ) {
-                    Text(text = "Update", fontSize = 18.sp)
-                }
+                UpdateButton(state,
+                    movie,
+                    someButtonClicked,
+                    season,
+                    episode,
+                    favoriteEpisodes,
+                    resourceState,
+                    viewModel,
+                    startWatching,
+                    finishWatching,
+                    navController)
             }
         }
     }
 }
 
 @Composable
-fun FakeUpdateScreen(){
+private fun UpdateButton(
+    state: UpdateState,
+    movie: UpdateUiModel,
+    someButtonClicked: Boolean,
+    season: Int,
+    episode: Int,
+    favoriteEpisodes: MutableState<List<Episode>>,
+    resourceState: MutableState<String>,
+    viewModel: UpdateViewModel,
+    startWatching: String,
+    finishWatching: String,
+    navController: NavController,
+) {
+    Button(
+        shape = RoundedCornerShape(14.dp),
+        modifier = Modifier.fillMaxWidth(0.4f),
+        enabled = isUpdateButtonEnabled(
+            state,
+            movie,
+            someButtonClicked,
+            season,
+            episode,
+            favoriteEpisodes,
+            resourceState),
+        onClick = {
 
+            if (
+                state.note != state.data?.note && state.data?.comments?.isEmpty()!! && state.data.totalRating == 0.0
+            ) {
+                viewModel.processIntent(UpdateIntent.CreateTotalMovie(
+                    TotalMovie(
+                        idDb = movie.idDb.toString(),
+                        type = movie.type,
+                        comments = mapOf(
+                            FirebaseAuth.getInstance().currentUser?.uid!! to
+                                    Comment(
+                                        text = state.note!!,
+                                        authorId = FirebaseAuth.getInstance().currentUser?.uid!!,
+                                    )
+                        )
+                    )
+                ))
+            } else if (state.note != state.data?.note
+                && (!state.data?.comments?.isEmpty()!! || state.data.totalRating != 0.0)
+            ) {
+                val currentUserId = FirebaseAuth.getInstance().currentUser?.uid!!
+                var userComment: Comment? = null
+                if (state.listComment!!.contains(currentUserId)) {
+                    userComment =
+                        state.listComment[currentUserId]
+                }
+
+                if (userComment != null) {
+                    val newComments =
+                        state.listComment.minus(userComment).plus(
+                            currentUserId to
+                                    userComment.copy(text = state.note!!,
+                                        likeUsersIdList = state.listComment[currentUserId]?.likeUsersIdList!!)
+                        )
+
+                    viewModel.processIntent(UpdateIntent.UpdateTotalMovieData(
+                        totalMovieHashMap = hashMapOf(
+                            "comments" to newComments
+                        ) as Map<String, Any>,
+                        idDb = state.data.idDb.toString(),
+                        type = state.data.type.toString(),
+                    ))
+                } else {
+                    viewModel.processIntent(UpdateIntent.UpdateTotalMovieData(
+                        totalMovieHashMap = hashMapOf(
+                            "comments" to state.listComment.plus(
+                                FirebaseAuth.getInstance().currentUser?.uid!! to
+                                        Comment(
+                                            text = state.note!!,
+                                            authorId = FirebaseAuth.getInstance().currentUser?.uid!!,
+                                        )),
+                        ) as Map<String, Any>,
+                        idDb = state.data.idDb.toString(),
+                        type = state.data.type.toString()
+                    ))
+                }
+            } else if (!state.data?.comments?.isEmpty()!!) {
+                viewModel.processIntent(UpdateIntent.UpdateTotalMovieData(
+                    totalMovieHashMap = hashMapOf("comments" to state.listComment) as Map<String, Any>,
+                    idDb = state.data.idDb.toString(),
+                    type = state.data.type.toString()
+                ))
+            }
+
+            FirebaseFirestore.getInstance().collection("movies")
+                .document(movie.id)
+                .update(
+                    hashMapOf(
+                        "note" to state.note,
+                        "startDate" to startWatching,
+                        "finishDate" to finishWatching,
+                        "season" to season,
+                        "favoriteEpisodes" to favoriteEpisodes.value,
+                        "resource" to resourceState.value,
+                        "episode" to episode,
+                    ) as Map<String, Any>
+                )
+                .addOnSuccessListener {
+                    if (finishWatching.isBlank()) {
+                        navController.navigate(MovierScreens.HomeScreen.name) {
+                            popUpTo(MovierScreens.UpdateScreen.name) {
+                                inclusive = true
+                            }
+                        }
+                    } else {
+                        navController.navigate(MovierScreens.StatsScreen.name) {
+                            popUpTo(MovierScreens.UpdateScreen.name) {
+                                inclusive = true
+                            }
+                        }
+                    }
+                }
+
+
+        }
+    ) {
+        Text(text = "Update", fontSize = 18.sp)
+    }
 }
+
+
 
 
 
