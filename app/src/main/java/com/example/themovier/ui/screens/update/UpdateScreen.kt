@@ -54,19 +54,16 @@ fun UpdateScreen(
         viewModel.processIntent(UpdateIntent.GetMovie(movieId!!))
     }
 
-
     if (state.data == null || state.data?.type?.isBlank()!! || state.loading) {
         AnimatedShimmer(navController = navController, screen = MovierScreens.UpdateScreen)
     } else {
-
         val movie = state.data
         detailsViewModel.searchMovie(movieId = movie!!.idDb.toString(), movieType = movie.type)
         //viewModel.processIntent(UpdateIntent.GetTotalMovie(idDb = movie.idDb.toString(),
         //       type = movie.type))
-        if (detailsViewModel.data == null || detailsViewModel.data!!.title.isBlank()) {
+        if (detailsViewModel.data == null || detailsViewModel.data!!.title.isBlank() || detailsViewModel.isLoading) {
             AnimatedShimmer(navController = navController, screen = MovierScreens.UpdateScreen)
         } else {
-
             detailsViewModel.data?.apply {
                 movie.status = status
                 movie.language = language
@@ -148,12 +145,11 @@ fun UpdateContent(viewModel: UpdateViewModel, navController: NavController, movi
                     Text(text = "Details")
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(  horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(
                         selected = state.updateType == UpdateType.Update,
                         onClick = {
-                            //Log.d("Wooow", state.listComment.toString())
-                            // Log.d("Woooe", state.data?.comments?.map { it.comment }.toString())
                             viewModel.processIntent(UpdateIntent.SetUpdateType(UpdateType.Update))
                         },
                     )
@@ -161,9 +157,7 @@ fun UpdateContent(viewModel: UpdateViewModel, navController: NavController, movi
                 }
             }
 
-            Log.d("AAAR", "aaaaaaa")
             if (state.updateType == UpdateType.Details) {
-
                 movie.toDetails().MovieDescription(state.listComment, viewModel = viewModel) {
                     viewModel.processIntent(UpdateIntent.UpdateCommentList(it))
                 }
@@ -338,7 +332,6 @@ fun UpdateContent(viewModel: UpdateViewModel, navController: NavController, movi
                             if (state.updateType == UpdateType.Update) {
                                 favEpisode = it.toInt()
                                 showFavEpisodeDialog.value = false
-
                                 favoriteEpisodes.value = favoriteEpisodes.value.plus((Episode(
                                     season = favSeason,
                                     episode = favEpisode

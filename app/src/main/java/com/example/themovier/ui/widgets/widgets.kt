@@ -3,6 +3,8 @@ package com.example.themovier.ui.widgets
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,15 +18,21 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Password
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -411,19 +419,14 @@ fun DetailsUIModel.MovieDescription(
             fontWeight = FontWeight.Light,
         )
 
-        Text(
-            text = "Description",
-            modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-        )
-
-        Text(
-            text = description,
-            modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Light,
-        )
+        DropDown(title = "Description") {
+            Text(
+                text = description,
+                modifier = Modifier.padding(vertical = 4.dp, horizontal = 1.dp),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Light,
+            )
+        }
 
         DescriptionRow(title = "Movie Title", text = title)
 
@@ -614,19 +617,70 @@ fun isUpdateButtonEnabled(
     favoriteEpisodes: MutableState<List<Episode>>,
     resourceState: MutableState<String>,
 ): Boolean {
-   /* Log.d("Wrrr",
-        (state.note != movie.note).toString() + " | " + (someButtonClicked).toString() + " | " + (movie.season != season).toString()
-                + " | " + (movie.episode != episode).toString() + " | " + (movie.favoriteEpisodes != favoriteEpisodes.value.toList()).toString()
-                + " | " + (resourceState.value != movie.resource).toString() + " | " + (state.listComment != state.data?.comments?.map { it.comment }).toString())
-    Log.d("Wrrre", state.listComment!!.sortedBy {
-        it.authorId
-    }.toString())
-    Log.d("Wrrre", state.data?.comments?.map { it.comment }!!.sortedBy {
-        it.authorId
-    }.toString())
-
-    */
     return (state.note != movie.note || someButtonClicked || movie.season != season || movie.episode != episode
             || movie.favoriteEpisodes != favoriteEpisodes.value.toList()
             || resourceState.value != movie.resource || state.listComment != state.data?.comments?.mapValues { it.value.comment })
 }
+
+@Composable
+fun DropDown(
+    title: String,
+    modifier: Modifier = Modifier,
+    initiallyOpened: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    var isOpen by remember {
+        mutableStateOf(initiallyOpened)
+    }
+    val alpha = animateFloatAsState(
+        targetValue = if (isOpen) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = 400
+        )
+    )
+
+    val rotateX = animateFloatAsState(
+        targetValue = if (isOpen) 0f else -90f,
+        animationSpec = tween(
+            durationMillis = 400
+        )
+    )
+
+    Column(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = title,
+                // color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp)
+            IconButton(onClick = { isOpen = !isOpen }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = "Open/Close",
+                    modifier = Modifier.scale(1f, if (isOpen) -1f else 1f)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .graphicsLayer {
+                    transformOrigin = TransformOrigin(0.5f, 0f)
+                    rotationX = rotateX.value
+                }
+                .alpha(alpha.value)
+        ) {
+            if(rotateX.value != -90f) content()
+        }
+    }
+}
+
