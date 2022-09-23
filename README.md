@@ -16,7 +16,7 @@ You can comment a movie and like other users's comments
 
 <img src="https://github.com/NedoPrograMax/movier/blob/master/photo1.jpg" width="200">
 
-And Yes, there are other users too. We are wery secure about it, so before using the app you have to register a new account(or login in the existing one)
+And Yes, there are other users too. I am very secure about it, so before using the app you have to register a new account(or login in the existing one)
 
 <img src="https://github.com/NedoPrograMax/movier/blob/master/photo4.jpg" width="200">
 
@@ -24,6 +24,6 @@ After that, you can customize your account(name and profile image)
 
 <img src="https://github.com/NedoPrograMax/movier/blob/master/photo2.jpg" width="200">
 
-So we're hoping you're gonna love it.
+So I'm hoping you're gonna love it.
 
 
