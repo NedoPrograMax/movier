@@ -3,6 +3,8 @@
 
 The Movier helps you to maintain your favorite movies and TV shows.
 
+Technology used: Kotlin, Jetpack Compose, Retrofit, Firebase Firestore, Firebase Aunthefication, Dagger Hilt, MVI, TMDB API and more
+
 You can easily search for any movie you like in TBDM and add it to yor list
 
 <img src="https://github.com/NedoPrograMax/movier/blob/master/search.gif" width="200">
