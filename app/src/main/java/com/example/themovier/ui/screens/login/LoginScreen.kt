@@ -1,6 +1,5 @@
 package com.example.themovier.ui.screens.login
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,13 +7,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -25,55 +19,113 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.themovier.ui.navigation.MovierScreens
-import com.example.themovier.ui.widgets.EmailInput
-import com.example.themovier.ui.widgets.MovierAppBar
-import com.example.themovier.ui.widgets.PasswordInput
+import com.example.themovier.ui.widgets.*
+import com.github.michaelbull.result.Result
+import com.github.michaelbull.result.fold
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
+    viewModel: LoginScreenViewModel = hiltViewModel(),
     navController: NavController,
-    viewModel: LoginScreenViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
 ) {
     val context = LocalContext.current
-    val showLoginForm = rememberSaveable {
+    var showLoginForm by rememberSaveable {
         mutableStateOf(true)
     }
+
+    var isLoginScreen by remember {
+        mutableStateOf(true)
+    }
+
+    var userCreationError by remember {
+        mutableStateOf<Result<Unit, Exception>?>(null)
+    }
+
+    var userLogInError by remember {
+        mutableStateOf<Result<Unit, Exception>?>(null)
+    }
+
     Scaffold(
-        topBar = { MovierAppBar(title = if (showLoginForm.value) "Login" else "SignUp") }
+        topBar = { MovierAppBar(title = if (showLoginForm) "Login" else "SignUp") }
     ) {
-        Column() {
+        Column {
             it
-            if (showLoginForm.value) {
+            if (showLoginForm) {
                 UserForm(navController, isCreateAccount = false) { email, password ->
-                    viewModel.signInWithEmailAndPassword(email, password,
-                        onFailure = { exception ->
-                            Toast.makeText(context, exception, Toast.LENGTH_LONG).show()
-                        }
-                    ) {
-                        navController.navigate(MovierScreens.HomeScreen.name) {
-                            popUpTo(MovierScreens.LoginScreen.name) {
-                                inclusive = true
-                            }
-                        }
-                    }
+
+                    viewModel.signInWithEmailAndPassword(email, password)
                 }
             } else {
                 UserForm(navController, isCreateAccount = true) { email, password ->
-                    viewModel.createUserWithEmailAndPassword(email,
+
+                    viewModel.createUserWithEmailAndPassword(
+                        email,
                         password,
-                        onFailure = { exception ->
-                            Toast.makeText(context, exception, Toast.LENGTH_LONG).show()
+                    )
+                }
+            }
+
+
+            LaunchedEffect(Unit) {
+                viewModel.action.collect { action ->
+                    when (action) {
+                        is LoginAction.ExceptionSignUp -> {
+                            userCreationError = action.result
                         }
-                    ) {
-                        navController.navigate(MovierScreens.HomeScreen.name) {
-                            popUpTo(MovierScreens.LoginScreen.name) {
-                                inclusive = true
-                            }
+                        is LoginAction.ExceptionLogIn -> {
+                            userLogInError = action.result
                         }
                     }
                 }
+            }
+            if (isLoginScreen) {
+                userCreationError?.let {
+                    it.fold(
+                        {
+                            if (isLoginScreen) {
+                                navController.navigate(MovierScreens.HomeScreen.name) {
+                                    popUpTo(MovierScreens.LoginScreen.name) {
+                                        inclusive = true
+                                    }
+                                    isLoginScreen = false
+                                }
+                            }
+
+                        },
+                        { e ->
+                            showToast(context, e.message!!)
+
+                        }
+                    )
+                    userCreationError = null
+                }
+
+                userLogInError?.let {
+                    it.fold(
+                        {
+                            if (isLoginScreen) {
+                                navController.navigate(MovierScreens.HomeScreen.name) {
+                                    popUpTo(MovierScreens.LoginScreen.name) {
+                                        inclusive = true
+                                    }
+                                    isLoginScreen = false
+                                }
+                            }
+
+                        },
+                        { e ->
+                            if (isLoginScreen) {
+                                showToast(context, e.message!!)
+                            }
+                        }
+                    )
+                    userLogInError = null
+                }
+
             }
 
             Spacer(modifier = Modifier.height(15.dp))
@@ -82,14 +134,18 @@ fun LoginScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val text = if (showLoginForm.value) "Sign Up" else "Login"
-                Text(text = if (showLoginForm.value) "New User?" else "Already Have an Account?")
+                val text = if (showLoginForm) "Sign Up" else "Login"
+                Text(text = if (showLoginForm) "New User?" else "Already Have an Account?")
                 Text(text = text,
                     modifier = Modifier
-                        .clickable { showLoginForm.value = !showLoginForm.value }
+                        .clickable { showLoginForm = !showLoginForm }
                         .padding(start = 5.dp),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colors.secondaryVariant)
+            }
+
+            if (viewModel.loading) {
+                LoadingDialog()
             }
         }
     }

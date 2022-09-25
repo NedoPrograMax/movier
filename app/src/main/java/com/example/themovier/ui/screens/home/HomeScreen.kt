@@ -6,7 +6,10 @@ import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
@@ -16,11 +19,10 @@ import androidx.compose.material.icons.filled.WorkHistory
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.themovier.data.utils.LongPressDraggable
 import com.example.themovier.data.utils.isPermanentlyDenied
+import com.example.themovier.ui.models.HomeScreenMenuItem
 import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.widgets.*
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -34,15 +36,15 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun HomeScreen(
+    viewModel: HomeScreenViewModel = hiltViewModel(),
     navController: NavController,
     selectImageLauncher: ActivityResultLauncher<Intent>,
     imageState: MutableState<Uri?>,
-    viewModel: HomeScreenViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
-
+    val state by viewModel.state.collectAsState()
 
     val permissionState = rememberMultiplePermissionsState(
         permissions = listOf(
@@ -75,7 +77,7 @@ fun HomeScreen(
             }
         }
     }
-    val userData = viewModel.dataUser.value
+    val userData = state.dataUser
     userData?.let {
         Log.d("TestingUser", userData.name)
         Scaffold(
@@ -92,7 +94,11 @@ fun HomeScreen(
                     actions = {
                         IconButton(onClick = {
                             Firebase.auth.signOut()
-                            navController.navigate(MovierScreens.LoginScreen.name)
+                            navController.navigate(MovierScreens.LoginScreen.name) {
+                                popUpTo(MovierScreens.HomeScreen.name) {
+                                    inclusive = true
+                                }
+                            }
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Logout,
@@ -106,9 +112,17 @@ fun HomeScreen(
                     imageUrl = if (imageState.value == null) userData.profileUrl else {
                         imageState.value.toString()
                     },
-                    userDocId = userData.id,
                     name = userData.name,
-                    enabled = imageState.value != null
+                    viewModel = viewModel,
+                    enabled = imageState.value != null,
+                    onUpdate = {
+                        imageState.value = null
+                        navController.navigate(MovierScreens.HomeScreen.name) {
+                            popUpTo(MovierScreens.HomeScreen.name) {
+                                inclusive = true
+                            }
+                        }
+                    },
                 ) {
                     permissionState.launchMultiplePermissionRequest()
                     val pickIntent =
@@ -117,12 +131,12 @@ fun HomeScreen(
                 }
                 DrawerBody(
                     items = listOf(
-                        MenuItem(
+                        HomeScreenMenuItem(
                             id = MovierScreens.AboutScreen.name,
                             title = "About",
                             icon = Icons.Default.Info
                         ),
-                        MenuItem(
+                        HomeScreenMenuItem(
                             id = MovierScreens.StatsScreen.name,
                             title = "Stats",
                             icon = Icons.Default.WorkHistory
@@ -137,14 +151,16 @@ fun HomeScreen(
                     navController.navigate(MovierScreens.SearchScreen.name)
                 }
             }
-        ) {
-            it
+        ) { padding ->
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 verticalArrangement = Arrangement.Center
             ) {
-                if (viewModel.loadingMovies.value && viewModel.dataMovies.value.isNullOrEmpty()) {
+                if (state.loading && state.dataMovies.isEmpty()) {
                     LinearProgressIndicator()
+                    //   AnimatedShimmer()
                 } else {
                     HomeContent(navController = navController, viewModel)
                 }
@@ -153,8 +169,8 @@ fun HomeScreen(
     }
 
 
-    if (viewModel.loadingUser.value) {
-        CircularProgressIndicator()
+    if (state.loading) {
+        AnimatedShimmer(navController = navController)
     }
 }
 
@@ -164,6 +180,7 @@ fun HomeContent(
     navController: NavController,
     viewModel: HomeScreenViewModel,
 ) {
+    val state by viewModel.state.collectAsState()
 
     val isAddingWatched = remember {
         mutableStateOf(false)
@@ -172,49 +189,48 @@ fun HomeContent(
         mutableStateOf(false)
     }
 
-    val watchedMovieList = viewModel.dataMovies.value?.filter { movie ->
+    val watchedMovieList = state.dataMovies.filter { movie ->
         movie.startDate.isNotBlank() && movie.finishDate.isBlank()
-    }!!
-    val unwatchedMovieList = viewModel.dataMovies.value?.filter { movie ->
+    }
+    val unwatchedMovieList = state.dataMovies.filter { movie ->
         movie.startDate.isBlank()
-    }!!
-    val displayMetrics = LocalContext.current.resources.displayMetrics
-    val screenHeight = displayMetrics.heightPixels / displayMetrics.density
-    val screenWidth = displayMetrics.widthPixels / displayMetrics.density
-    val cardModifier = Modifier
-        .width((screenWidth * 0.45).dp)
-        .height((screenHeight * 0.3).dp)
+    }
 
     LongPressDraggable(modifier = Modifier.fillMaxSize()) {
-        Column {
-            AddingArea(isAddingWatched, viewModel, "Watching now")
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceEvenly
+        ) {
 
-            Log.d("WathedListM", watchedMovieList.toString())
+            Column(
+                modifier = Modifier.weight(1F)
+            ) {
+                AddingArea(isAddingWatched, viewModel, "Watching now")
 
-            MovieItemsRow(
-                movieList = watchedMovieList,
-                isAdding = isAddingUnWatched,
-                cardModifier = cardModifier,
-                screenHeight = screenHeight,
-                navController = navController,
-                screenWidth = screenWidth
-            )
+                MovieItemsRow(
+                    movieList = watchedMovieList,
+                    isAdding = isAddingUnWatched,
+                    navController = navController,
+                )
 
-            AddingArea(isAddingUnWatched, viewModel, "Watch later")
+            }
 
-            MovieItemsRow(
-                movieList = unwatchedMovieList,
-                cardModifier = cardModifier,
-                isAdding = isAddingWatched,
-                screenHeight = screenHeight,
-                navController = navController,
-                screenWidth = screenWidth
-            )
+            Column(modifier = Modifier.weight(1F)) {
+                AddingArea(isAddingUnWatched, viewModel, "Watch later")
 
+                MovieItemsRow(
+                    movieList = unwatchedMovieList,
+                    isAdding = isAddingWatched,
+                    navController = navController,
+                )
+
+            }
         }
 
     }
 }
+
+
 
 
 

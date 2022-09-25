@@ -8,9 +8,12 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.themovier.ui.navigation.MovierScreens
 import com.example.themovier.ui.screens.home.HomeScreenViewModel
@@ -18,7 +21,11 @@ import com.example.themovier.ui.widgets.MovieItemsRow
 import com.example.themovier.ui.widgets.MovierAppBar
 
 @Composable
-fun StatsScreen(navController: NavController, viewModel: HomeScreenViewModel) {
+fun StatsScreen(
+    viewModel: HomeScreenViewModel = hiltViewModel(),
+    navController: NavController,
+) {
+    val state by viewModel.state.collectAsState()
     Scaffold(
         topBar = {
             MovierAppBar(
@@ -35,7 +42,7 @@ fun StatsScreen(navController: NavController, viewModel: HomeScreenViewModel) {
         }
     ) {
         it
-        if (viewModel.loadingMovies.value && viewModel.dataMovies.value.isNullOrEmpty()) {
+        if (state.loading && state.dataMovies.isEmpty()) {
             LinearProgressIndicator()
         } else {
             StatsContent(navController = navController, viewModel)
@@ -46,22 +53,14 @@ fun StatsScreen(navController: NavController, viewModel: HomeScreenViewModel) {
 @Composable
 fun StatsContent(navController: NavController, viewModel: HomeScreenViewModel) {
 
-    val displayMetrics = LocalContext.current.resources.displayMetrics
-    val screenHeight = displayMetrics.heightPixels / displayMetrics.density
-    val screenWidth = displayMetrics.widthPixels / displayMetrics.density
-    val cardModifier = Modifier
-        .width((screenWidth * 0.45).dp)
-        .height((screenHeight * 0.3).dp)
+    val state by viewModel.state.collectAsState()
 
-    val watchedMovieList = viewModel.dataMovies.value?.filter { movierItem ->
+    val watchedMovieList = state.dataMovies.filter { movierItem ->
         movierItem.finishDate.isNotBlank()
     }!!
 
     MovieItemsRow(
         movieList = watchedMovieList,
-        cardModifier = cardModifier,
-        screenHeight = screenHeight,
         navController = navController,
-        screenWidth = screenWidth
     )
 }

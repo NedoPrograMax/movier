@@ -1,60 +1,57 @@
 package com.example.themovier.ui.screens.login
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.themovier.data.datasource.FirebaseDataSourceImpl
-
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import com.example.themovier.domain.user.UserDataSource
+import com.example.themovier.ui.screens.home.HomeAction
+import com.github.michaelbull.result.Result
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class LoginScreenViewModel : ViewModel() {
-    private val auth: FirebaseAuth = Firebase.auth
-    private val firebaseDataSource = FirebaseDataSourceImpl()
+@HiltViewModel
+class LoginScreenViewModel @Inject constructor(private val userDataSource: UserDataSource) :
+    ViewModel() {
+
+    private val _action = MutableSharedFlow<LoginAction>()
+    val action: SharedFlow<LoginAction> get() = _action
+
+
+    var loading by
+    mutableStateOf(false)
+
 
     fun createUserWithEmailAndPassword(
         email: String,
         password: String,
-        onFailure: (String) -> Unit = {},
-        home: () -> Unit,
-    ) = viewModelScope.launch {
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    firebaseDataSource.createUser(email = task.result.user?.email!!,
-                        userId = auth.currentUser?.uid!!)
-                    home()
-                } else {
-                    task.exception?.message?.let { onFailure(it) }
-                }
-            }
-            .addOnFailureListener {
-                it.message?.let { it1 -> onFailure(it1) }
-            }
+    ) = viewModelScope.launch(Dispatchers.IO) {
+        loading = true
+        val result = userDataSource.createUserWithEmailAndPassword(
+            email = email,
+            password = password,
+        )
+        _action.emit(LoginAction.ExceptionSignUp(result))
+        loading = false
     }
 
     fun signInWithEmailAndPassword(
         email: String,
         password: String,
-        onFailure: (String) -> Unit = {},
-        home: () -> Unit,
-    ) = viewModelScope.launch {
-        try {
-            auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        home()
-                    } else {
-                        task.exception?.message?.let { onFailure(it) }
-                    }
-                }
-                .addOnFailureListener {
-                    it.message?.let { it1 -> onFailure(it1) }
-                }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+    ) = viewModelScope.launch(Dispatchers.IO) {
+        loading = true
+        val result = userDataSource.signInWithEmailAndPassword(
+            email = email,
+            password = password,
+        )
+        _action.emit(LoginAction.ExceptionLogIn(result))
+        loading = false
     }
 
 }

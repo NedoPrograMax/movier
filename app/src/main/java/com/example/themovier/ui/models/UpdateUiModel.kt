@@ -1,8 +1,10 @@
-package com.example.themovier.data.models
+package com.example.themovier.ui.models
 
+import com.example.themovier.data.models.Comment
+import com.example.themovier.data.models.Episode
 import com.example.themovier.domain.models.Genre
 
-data class UpdateModel(
+data class UpdateUiModel(
     val idDb: Int = 0,
     val id: String = "",
     val title: String = "",
@@ -23,9 +25,11 @@ data class UpdateModel(
     val startDate: String = "",
     val finishDate: String = "",
     val favoriteEpisodes: List<Episode> = listOf(),
+    val comments: Map<String, FullComment> = mapOf(),
+    val totalRating: Double = 0.0,
 )
 
-fun UpdateModel.toDetails() = this.run {
+fun UpdateUiModel.toDetails() = this.run {
     DetailsUIModel(
         title = title,
         posterUrl = posterUrl,
@@ -35,5 +39,7 @@ fun UpdateModel.toDetails() = this.run {
         status = status,
         language = language,
         releaseDate = releaseDate,
+        comments = comments,
+        totalRating = totalRating,
     )
 }

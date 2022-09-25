@@ -6,10 +6,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.themovier.data.datasource.FirebaseDataSourceImpl
-import com.example.themovier.data.models.DetailsUIModel
+import com.example.themovier.ui.models.DetailsUIModel
 import com.example.themovier.data.utils.toDetails
 import com.example.themovier.domain.models.MovierItemModel
+import com.example.themovier.domain.movie.MovieDataSource
 import com.example.themovier.domain.repositories.ApiRepo
 import com.github.michaelbull.result.onFailure
 import com.github.michaelbull.result.onSuccess
@@ -19,10 +19,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class DetailsViewModel @Inject constructor(private val repository: ApiRepo) : ViewModel() {
+class DetailsViewModel @Inject constructor(
+    private val apiRepo: ApiRepo,
+    private val movieDataSource: MovieDataSource,
+) : ViewModel() {
     var data: DetailsUIModel? by mutableStateOf(null)
     var isLoading: Boolean by mutableStateOf(true)
-    private val firebaseDataSource = FirebaseDataSourceImpl()
 
 
     fun searchMovie(movieId: String, movieType: String) {
@@ -31,7 +33,7 @@ class DetailsViewModel @Inject constructor(private val repository: ApiRepo) : Vi
             if (movieId.isBlank()) return@launch
             try {
                 if (movieType == "movie") {
-                    val response = repository.getMovieInfo(movieId)
+                    val response = apiRepo.getMovieInfo(movieId)
                     response.onSuccess { result ->
                         if (result.title.isNotBlank()) {
                             data = result.toDetails()
@@ -40,7 +42,7 @@ class DetailsViewModel @Inject constructor(private val repository: ApiRepo) : Vi
                         }
                     }
                 } else if (movieType == "tv") {
-                    val response = repository.getTvInfo(movieId)
+                    val response = apiRepo.getTvInfo(movieId)
                     response.onSuccess { result ->
                         if (result.original_name.isNotBlank()) {
                             data = result.toDetails()
@@ -59,10 +61,14 @@ class DetailsViewModel @Inject constructor(private val repository: ApiRepo) : Vi
     }
 
     fun createMovie(movie: MovierItemModel) {
-        firebaseDataSource.createMovie(movie)
+        viewModelScope.launch {
+            movieDataSource.createMovie(movie)
+        }
     }
 
     fun deleteMovie(movieId: String) {
-        firebaseDataSource.deleteMovie(movieId)
+        viewModelScope.launch {
+            movieDataSource.deleteMovie(movieId)
+        }
     }
 }
